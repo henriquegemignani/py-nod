@@ -103,3 +103,4 @@ ENV/
 # Cython
 *.cpp
 /nod/nod.lib
+/nod/logvisor.lib

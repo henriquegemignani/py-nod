@@ -1,6 +1,7 @@
 from libc.stddef cimport wchar_t
 from libcpp cimport bool
 from libcpp.string cimport string
+from libcpp.memory cimport unique_ptr
 
 
 cdef extern from "string" namespace "std":
@@ -21,7 +22,14 @@ cdef extern from "nod/Util.hpp" namespace "nod":
         wstring sys_str()
 
 cdef extern from "nod/nod.hpp" namespace "nod":
+    cdef cppclass DiscBase:
+        pass
+
     cdef struct ExtractionContext:
         bool force
 
-    void OpenDiscFromImage(const SystemChar* path)
+    unique_ptr[DiscBase] OpenDiscFromImage(const SystemChar* path, bool& isWii)
+
+
+cdef class DiscBaseWrapper:
+    cdef unique_ptr[DiscBase] c_disc
