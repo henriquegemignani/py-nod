@@ -1,6 +1,5 @@
-from libcpp cimport bool
-
 from libc.stddef cimport wchar_t
+from libcpp cimport bool
 from libcpp.string cimport string
 
 
