@@ -8,4 +8,10 @@ std::function<void(const std::string&, float)> createProgressCallbackFunction(Py
     };
 }
 
+nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject *, float, const nod::SystemString&, size_t)) {
+    return [=](float totalProg, const nod::SystemString& fileName, size_t fileBytesXfered) {
+        callback(obj, totalProg, fileName, fileBytesXfered);
+    };
+}
+
 }

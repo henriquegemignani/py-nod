@@ -19,12 +19,12 @@ cdef extern from "nod/Util.hpp" namespace "nod":
     ctypedef wstring SystemString
 
     cdef cppclass SystemUTF8View:
-        SystemUTF8View(wstring)
+        SystemUTF8View(SystemString)
         string utf8_str()
 
     cdef cppclass SystemStringView:
         SystemStringView(string)
-        wstring sys_str()
+        SystemString sys_str()
 
 
 cdef extern from "nod/DiscBase.hpp" namespace "nod":
@@ -61,3 +61,4 @@ cdef extern from "nod/nod.hpp" namespace "nod":
 
 cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
     function[void(const string&, float)] createProgressCallbackFunction(object, void (*)(object, string, float))
+    function[void(float, const SystemString&, size_t)] createFProgressFunction(object, void (*)(object, float, const SystemString&, size_t));

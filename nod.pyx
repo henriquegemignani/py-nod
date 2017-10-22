@@ -1,13 +1,27 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Callable
 
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
 
-from nod_wrap cimport ExtractionContext as c_ExtractionContext, createProgressCallbackFunction, DiscBase as c_DiscBase, OpenDiscFromImage, SystemStringView, wstring
+from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
+    createProgressCallbackFunction, DiscBase as c_DiscBase, \
+    OpenDiscFromImage, SystemStringView, SystemUTF8View, SystemString, \
+    DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction
+
+cdef str _system_string_to_str(SystemString path):
+    return SystemUTF8View(path).utf8_str().decode("utf-8")
+
+cdef SystemString _str_to_system_string(str path):
+    return SystemStringView(path.encode("utf-8")).sys_str()
+
+ProgressCallback = Callable[[float, str, int], None]
 
 cdef void invoke_callback_function(object callback, const string& a, float progress):
     callback(a.decode("utf-8"), progress)
+
+cdef void invoke_fprogress_function(object callback, float totalProg, const SystemString& fileName, size_t fileBytesXfered):
+    callback(totalProg, _system_string_to_str(fileName), fileBytesXfered)
 
 cdef class ExtractionContext:
     cdef c_ExtractionContext c_context
@@ -29,6 +43,12 @@ cdef class ExtractionContext:
 cdef class Partition:
     cdef c_DiscBase.IPartition*c_partition
 
+    @staticmethod
+    cdef create(c_DiscBase.IPartition* c_partition):
+        partition = Partition()
+        partition.c_partition = c_partition
+        return partition
+
     def extract_to_directory(self, path: str, context: ExtractionContext):
         self.c_partition.extractToDirectory(
             _str_to_system_string(path),
@@ -41,11 +61,19 @@ cdef class DiscBase:
     def get_data_partition(self):
         cdef c_DiscBase.IPartition*partition = self.c_disc.get().getDataPartition()
         if partition:
-            wrapper = Partition()
-            wrapper.c_partition = partition
-            return wrapper
+            return Partition.create(partition)
         else:
             return None
+
+cdef class DiscBuilderGCN:
+    cdef c_DiscBuilderGCN* c_builder
+
+    def __cinit__(self, out_path: str, progress_callback: ProgressCallback):
+        self.c_builder = new c_DiscBuilderGCN(_str_to_system_string(out_path).c_str(),
+                                              createFProgressFunction(progress_callback, invoke_fprogress_function))
+
+    def __dealloc__(self):
+        del self.c_builder
 
 def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
     disc = DiscBase()
@@ -56,6 +84,3 @@ def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
         return disc, is_wii
     else:
         return None
-
-cdef wstring _str_to_system_string(str path):
-    return SystemStringView(path.encode("utf-8")).sys_str()
