@@ -68,6 +68,9 @@ cdef class DiscBase:
 cdef class DiscBuilderGCN:
     cdef c_DiscBuilderGCN* c_builder
 
+    def __init__(self, out_path: str, progress_callback: ProgressCallback):
+        pass
+
     def __cinit__(self, out_path: str, progress_callback: ProgressCallback):
         self.c_builder = new c_DiscBuilderGCN(_str_to_system_string(out_path).c_str(),
                                               createFProgressFunction(progress_callback, invoke_fprogress_function))
