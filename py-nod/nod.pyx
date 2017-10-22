@@ -4,6 +4,7 @@ from libc.stddef cimport wchar_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
+from libcpp.functional cimport function
 
 
 cdef extern from "string" namespace "std":
@@ -37,8 +38,17 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 cdef extern from "nod/nod.hpp" namespace "nod":
     cdef struct ExtractionContext:
         c_bool force
+        function[void(const string&, float)] progressCB
 
     unique_ptr[DiscBase] OpenDiscFromImage(const SystemChar* path, c_bool& isWii)
+
+
+cdef extern from "nod_wrap_util.hpp" namespace "nod_wrap":
+    function[void(const string&, float)] createProgressCallbackFunction(object, void (*)(object, string, float))
+
+
+cdef void invoke_callback_function(object callback, const string& a, float progress):
+    callback(a.decode("utf-8"), progress)
 
 
 cdef class ExtractionContextWrapper:
@@ -54,6 +64,9 @@ cdef class ExtractionContextWrapper:
     @force.setter
     def force(self, value):
         self.c_context.force = value
+
+    def set_progress_callback(self, callback):
+        self.c_context.progressCB = createProgressCallbackFunction(callback, invoke_callback_function)
 
 
 cdef class PartitionWrapper:
