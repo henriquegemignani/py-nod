@@ -11,7 +11,7 @@ custom_include_paths = [
 ext_modules = [
     Extension(
         "nod",
-        ["py-nod/nod.pyx", "py-nod/nod_wrap_util.cxx"],
+        ["nod.pyx", "py-nod/nod_wrap_util.cxx"],
         language='c++',
         # extra_link_args=["-debug"],
         # extra_compile_args=["-DUNICODE", "-Zi", "/Od"],
