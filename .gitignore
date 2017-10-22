@@ -104,3 +104,4 @@ ENV/
 *.cpp
 /py-nod/nod.lib
 /py-nod/logvisor.lib
+/.idea/workspace.xml
