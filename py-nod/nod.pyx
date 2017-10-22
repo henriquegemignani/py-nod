@@ -1,6 +1,7 @@
 from typing import Tuple, Optional
 
 from libc.stddef cimport wchar_t
+from libc.stdint cimport uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
@@ -27,12 +28,27 @@ cdef extern from "nod/Util.hpp" namespace "nod":
 
 
 cdef extern from "nod/DiscBase.hpp" namespace "nod":
+    cdef enum EBuildResult:
+        Success
+        Failed
+        DiskFull
+
+    ctypedef function[void(float, const SystemString&, size_t)] FProgress
+
     cdef cppclass DiscBase:
         cppclass IPartition:
             void extractToDirectory(const SystemString& path, const ExtractionContext& ctx)
 
         IPartition* getDataPartition()
         IPartition* getUpdatePartition()
+
+
+cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
+    cdef cppclass DiscBuilderGCN:
+        DiscBuilderGCN(const SystemChar* outPath, FProgress progressCB)
+        EBuildResult buildFromDirectory(const SystemChar* dirIn)
+
+    uint64_t "DiscBuilderGCN::CalculateTotalSizeRequired"(const SystemChar* dirIn)
 
 
 cdef extern from "nod/nod.hpp" namespace "nod":
