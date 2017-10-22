@@ -7,17 +7,16 @@ from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
 from libcpp.functional cimport function
 
-from nod_wrap cimport *
+from nod_wrap cimport ExtractionContext as c_ExtractionContext, createProgressCallbackFunction, DiscBase as c_DiscBase, OpenDiscFromImage, SystemStringView, wstring
 
 cdef void invoke_callback_function(object callback, const string& a, float progress):
     callback(a.decode("utf-8"), progress)
 
-
 cdef class ExtractionContextWrapper:
-    cdef ExtractionContext c_context
+    cdef c_ExtractionContext c_context
 
     def __cinit__(self):
-        self.c_context = ExtractionContext()
+        self.c_context = c_ExtractionContext()
 
     @property
     def force(self):
@@ -30,9 +29,8 @@ cdef class ExtractionContextWrapper:
     def set_progress_callback(self, callback):
         self.c_context.progressCB = createProgressCallbackFunction(callback, invoke_callback_function)
 
-
 cdef class PartitionWrapper:
-    cdef DiscBase.IPartition* c_partition
+    cdef c_DiscBase.IPartition*c_partition
 
     def extract_to_directory(self, path: str, context: ExtractionContextWrapper):
         self.c_partition.extractToDirectory(
@@ -40,19 +38,17 @@ cdef class PartitionWrapper:
             context.c_context
         )
 
-
 cdef class DiscBaseWrapper:
-    cdef unique_ptr[DiscBase] c_disc
+    cdef unique_ptr[c_DiscBase] c_disc
 
     def get_data_partition(self):
-        cdef DiscBase.IPartition* partition = self.c_disc.get().getDataPartition()
+        cdef c_DiscBase.IPartition*partition = self.c_disc.get().getDataPartition()
         if partition:
             wrapper = PartitionWrapper()
             wrapper.c_partition = partition
             return wrapper
         else:
             return None
-
 
 def open_disc_from_image(path: str) -> Optional[Tuple[DiscBaseWrapper, bool]]:
     disc = DiscBaseWrapper()
@@ -63,7 +59,6 @@ def open_disc_from_image(path: str) -> Optional[Tuple[DiscBaseWrapper, bool]]:
         return disc, is_wii
     else:
         return None
-
 
 cdef wstring _str_to_system_string(str path):
     return SystemStringView(path.encode("utf-8")).sys_str()
