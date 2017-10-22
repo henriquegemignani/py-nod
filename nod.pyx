@@ -7,7 +7,7 @@ from libcpp.memory cimport unique_ptr
 from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
     createProgressCallbackFunction, DiscBase as c_DiscBase, \
     OpenDiscFromImage, SystemStringView, SystemUTF8View, SystemString, \
-    DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction
+    DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult
 
 cdef str _system_string_to_str(SystemString path):
     return SystemUTF8View(path).utf8_str().decode("utf-8")
@@ -74,6 +74,13 @@ cdef class DiscBuilderGCN:
 
     def __dealloc__(self):
         del self.c_builder
+
+    def build_from_directory(self, directory_in: str) -> EBuildResult:
+        return self.c_builder.buildFromDirectory(_str_to_system_string(directory_in).c_str())
+
+    @staticmethod
+    def calculate_total_size_required(directory_in: str) -> int:
+        return c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_system_string(directory_in).c_str())
 
 def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
     disc = DiscBase()

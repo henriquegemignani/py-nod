@@ -48,7 +48,8 @@ cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
         DiscBuilderGCN(const SystemChar* outPath, FProgress progressCB)
         EBuildResult buildFromDirectory(const SystemChar* dirIn)
 
-    uint64_t "DiscBuilderGCN::CalculateTotalSizeRequired"(const SystemChar* dirIn)
+        @staticmethod
+        uint64_t CalculateTotalSizeRequired(const SystemChar* dirIn)
 
 
 cdef extern from "nod/nod.hpp" namespace "nod":
