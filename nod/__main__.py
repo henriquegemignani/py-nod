@@ -11,7 +11,8 @@ class Commands:
 
     def fprogress_callback(self, progress: float, name: str, bytes: int):
         if self.args.verbose:
-            pass
+            print("\r" + " " * 100, end="")
+            print("\r{:.0%} {} {} B".format(progress, name, bytes), flush=True)
 
     def extract(self):
         args = self.args
@@ -53,6 +54,9 @@ class Commands:
 
         disc_builder = nod.DiscBuilderGCN(self.args.image_out, self.fprogress_callback)
         ret = disc_builder.build_from_directory(filesystem_root)
+
+        if self.args.verbose:
+            print()
 
         if ret != nod.BuildResult.Success:
             print("Failure building the image: code {}".format(ret))
