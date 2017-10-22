@@ -28,10 +28,12 @@ cdef extern from "nod/Util.hpp" namespace "nod":
 
 
 cdef extern from "nod/DiscBase.hpp" namespace "nod":
-    cdef enum EBuildResult:
-        Success
-        Failed
-        DiskFull
+    cdef cppclass EBuildResult:
+        c_bool operator==(const EBuildResult&)
+
+    cdef EBuildResult EBuildResult_Success "nod::EBuildResult::Success"
+    cdef EBuildResult EBuildResult_Failed "nod::EBuildResult::Failed"
+    cdef EBuildResult EBuildResult_DiskFull "nod::EBuildResult::DiskFull"
 
     ctypedef function[void(float, const SystemString&, size_t)] FProgress
 

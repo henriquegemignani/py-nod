@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Tuple, Optional, Callable
 
 from libcpp cimport bool as c_bool
@@ -7,7 +8,8 @@ from libcpp.memory cimport unique_ptr
 from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
     createProgressCallbackFunction, DiscBase as c_DiscBase, \
     OpenDiscFromImage, SystemStringView, SystemUTF8View, SystemString, \
-    DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult
+    DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
+    EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull
 
 cdef str _system_string_to_str(SystemString path):
     return SystemUTF8View(path).utf8_str().decode("utf-8")
@@ -65,6 +67,22 @@ cdef class DiscBase:
         else:
             return None
 
+class BuildResult(Enum):
+    Success = 1
+    Failed = 2
+    DiskFull = 3
+
+
+cdef object convert_e_build_result(EBuildResult result):
+    if result == EBuildResult_Success:
+        return BuildResult.Success
+    elif result == EBuildResult_Failed:
+        return BuildResult.Failed
+    elif result == EBuildResult_DiskFull:
+        return BuildResult.DiskFull
+    else:
+        raise ValueError("Unknown EBuildResult")
+
 cdef class DiscBuilderGCN:
     cdef c_DiscBuilderGCN* c_builder
 
@@ -78,8 +96,8 @@ cdef class DiscBuilderGCN:
     def __dealloc__(self):
         del self.c_builder
 
-    def build_from_directory(self, directory_in: str) -> EBuildResult:
-        return self.c_builder.buildFromDirectory(_str_to_system_string(directory_in).c_str())
+    def build_from_directory(self, directory_in: str) -> BuildResult:
+        return convert_e_build_result(self.c_builder.buildFromDirectory(_str_to_system_string(directory_in).c_str()))
 
     @staticmethod
     def calculate_total_size_required(directory_in: str) -> int:

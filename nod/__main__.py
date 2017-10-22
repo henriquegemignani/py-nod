@@ -54,7 +54,7 @@ class Commands:
         disc_builder = nod.DiscBuilderGCN(self.args.image_out, self.fprogress_callback)
         ret = disc_builder.build_from_directory(filesystem_root)
 
-        if ret != nod.EBuildResult.Success:
+        if ret != nod.BuildResult.Success:
             print("Failure building the image: code {}".format(ret))
             raise SystemExit(3)
 
