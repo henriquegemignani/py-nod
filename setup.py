@@ -5,16 +5,21 @@ from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
 custom_include_paths = [
-    os.path.join(os.path.dirname(__file__), "nod", "include"),
+    os.path.join(os.path.dirname(__file__), "py-nod", "include"),
 ]
 
 ext_modules = [
     Extension(
         "nod",
-        ["nod/nod.pyx"],
+        ["py-nod/nod.pyx", "py-nod/nod_wrap_util.cxx"],
         language='c++',
+        # extra_link_args=["-debug"],
+        # extra_compile_args=["-DUNICODE", "-Zi", "/Od"],
         extra_compile_args=["-DUNICODE"],
-        extra_objects=["nod/nod.lib"],
+        extra_objects=[
+            "py-nod/nod.lib",
+            "py-nod/logvisor.lib",
+        ],
     )
 ]
 cythonized_ext_modules = cythonize(
