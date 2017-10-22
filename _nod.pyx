@@ -49,8 +49,8 @@ cdef class Partition:
         partition.c_partition = c_partition
         return partition
 
-    def extract_to_directory(self, path: str, context: ExtractionContext):
-        self.c_partition.extractToDirectory(
+    def extract_to_directory(self, path: str, context: ExtractionContext) -> bool:
+        return self.c_partition.extractToDirectory(
             _str_to_system_string(path),
             context.c_context
         )
@@ -58,7 +58,7 @@ cdef class Partition:
 cdef class DiscBase:
     cdef unique_ptr[c_DiscBase] c_disc
 
-    def get_data_partition(self):
+    def get_data_partition(self) -> Optional[Partition]:
         cdef c_DiscBase.IPartition*partition = self.c_disc.get().getDataPartition()
         if partition:
             return Partition.create(partition)

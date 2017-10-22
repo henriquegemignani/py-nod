@@ -10,8 +10,8 @@ custom_include_paths = [
 
 ext_modules = [
     Extension(
-        "nod",
-        ["nod.pyx", "py-nod/nod_wrap_util.cxx"],
+        "_nod",
+        ["_nod.pyx", "py-nod/nod_wrap_util.cxx"],
         language='c++',
         # extra_link_args=["-debug"],
         # extra_compile_args=["-DUNICODE", "-Zi", "/Od"],
@@ -37,6 +37,7 @@ setup(
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
+    packages=["nod"],
     scripts=[
     ],
     package_data={

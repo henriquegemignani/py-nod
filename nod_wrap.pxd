@@ -37,7 +37,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 
     cdef cppclass DiscBase:
         cppclass IPartition:
-            void extractToDirectory(const SystemString& path, const ExtractionContext& ctx)
+            c_bool extractToDirectory(const SystemString& path, const ExtractionContext& ctx) const
 
         IPartition* getDataPartition()
         IPartition* getUpdatePartition()
