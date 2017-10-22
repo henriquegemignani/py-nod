@@ -33,15 +33,13 @@ for ext_module in cythonized_ext_modules:
 
 setup(
     name='nod',
-    version="0.0.0",
+    version="0.1.0",
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
-    # packages=find_packages(),
     scripts=[
     ],
     package_data={
-        # "randovania": ["data/*"]
     },
     classifiers=[
         'Development Status :: 4 - Beta',
