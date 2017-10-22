@@ -96,5 +96,5 @@ def parse_args(parser):
 
     Commands(args).execute()
 
-
-parse_args(create_parsers())
+if __name__ == "__main__":
+    parse_args(create_parsers())
