@@ -40,8 +40,9 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         cmake_options = ext.cmake_options
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+        cmake_args = ['-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable]
+        library_output_dir = extdir
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -49,15 +50,15 @@ class CMakeBuild(build_ext):
             build_args.append("--clean-first")
 
         if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            cmake_args += ['-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             if sys.maxsize > 2 ** 32:
                 cmake_args += ['-A', 'x64']
             build_args += ['--', '/m', '/verbosity:minimal']
-            extension = "lib"
+            library_name_format = "{}.lib"
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j2']
-            extension = "a"
+            library_name_format = "lib{}.a"
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
@@ -71,19 +72,16 @@ class CMakeBuild(build_ext):
             env=env,
             check=True
         )
-        subprocess.run(
-            ['cmake', '--build', '.'] + build_args,
-            cwd=self.build_temp,
-            check=True
-        )
+        for target, target_output in cmake_options["targets"].items():
+            subprocess.run(
+                ['cmake', '--build', '.', '--target', target] + build_args,
+                cwd=self.build_temp,
+                check=True
+            )
+            ext.extra_objects.append(
+                os.path.join(library_output_dir, library_name_format.format(target))
+            )
 
-        ext.extra_objects.extend(
-            os.path.join(self.build_temp, lib.format(
-                config=cfg,
-                ext=extension
-            ))
-            for lib in cmake_options.get("libraries", [])
-        )
         super().build_extension(ext)
 
 
@@ -107,10 +105,10 @@ ext_modules = [
         ["_nod.pyx", "py-nod/nod_wrap_util.cxx"],
         cmake_options={
             "dir": nod_submodule,
-            "libraries": [
-                "lib/{config}/nod.{ext}",
-                "logvisor/{config}/logvisor.{ext}",
-            ]
+            "targets": {
+                "nod": "lib",
+                "logvisor": "logvisor",
+            },
         },
         language='c++',
         extra_compile_args=extra_compile_args,
