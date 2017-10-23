@@ -1,2 +1,3 @@
 include _nod.pyx
+recursive-include py-nod *
 recursive-include external *
