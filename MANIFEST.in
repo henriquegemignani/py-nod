@@ -1,0 +1,2 @@
+include _nod.pyx
+recursive-include external *
