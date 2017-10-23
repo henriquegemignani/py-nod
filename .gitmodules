@@ -1,0 +1,3 @@
+[submodule "external/nod"]
+	path = external/nod
+	url = https://github.com/AxioDL/nod.git
