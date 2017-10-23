@@ -12,6 +12,8 @@ from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext
 from Cython.Build import cythonize
 
+is_windows = platform.system() == "Windows"
+
 
 class CMakeExtension(Extension):
     def __init__(self, name, sources, cmake_options, *args, **kw):
@@ -30,7 +32,7 @@ class CMakeBuild(build_ext):
             raise RuntimeError("CMake must be installed to build the following extensions: " +
                                ", ".join(e.name for e in self.extensions))
 
-        if platform.system() == "Windows":
+        if is_windows:
             cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.stdout).group(1))
             if cmake_version < '3.1.0':
                 raise RuntimeError("CMake >= 3.1.0 is required on Windows")
@@ -48,7 +50,7 @@ class CMakeBuild(build_ext):
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
 
-        if platform.system() == "Windows":
+        if is_windows:
             cmake_args += ['-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             if sys.maxsize > 2 ** 32:
                 cmake_args += ['-A', 'x64']
@@ -89,9 +91,6 @@ class CMakeBuild(build_ext):
             )
 
         super().build_extension(ext)
-
-
-is_windows = True
 
 nod_submodule = os.path.join(os.path.dirname(__file__), "external", "nod")
 
@@ -142,7 +141,7 @@ for ext_module in cythonized_ext_modules:
 
 setup(
     name='nod',
-    version="0.1.4",
+    version="0.1.5",
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
