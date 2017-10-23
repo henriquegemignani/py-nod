@@ -140,7 +140,7 @@ for ext_module in cythonized_ext_modules:
 
 setup(
     name='nod',
-    version="0.1.1",
+    version="0.1.2",
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
