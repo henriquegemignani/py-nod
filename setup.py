@@ -104,6 +104,8 @@ extra_compile_args = []
 
 if is_windows:
     extra_compile_args.append("-DUNICODE")
+else:
+    extra_compile_args.append("-std=c++14")
 
 ext_modules = [
     CMakeExtension(
@@ -140,7 +142,7 @@ for ext_module in cythonized_ext_modules:
 
 setup(
     name='nod',
-    version="0.1.3",
+    version="0.1.4",
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
