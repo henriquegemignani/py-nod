@@ -2,15 +2,14 @@ import os
 import platform
 import re
 import subprocess
+import sys
 from distutils.version import LooseVersion
 
-import sys
-
+from Cython.Build import cythonize
 from Cython.Build.Dependencies import default_create_extension
 from setuptools import setup
-from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext
-from Cython.Build import cythonize
+from setuptools.extension import Extension
 
 is_windows = platform.system() == "Windows"
 
@@ -92,6 +91,7 @@ class CMakeBuild(build_ext):
 
         super().build_extension(ext)
 
+
 nod_submodule = os.path.join(os.path.dirname(__file__), "external", "nod")
 
 custom_include_paths = [
@@ -130,6 +130,7 @@ def create_extension(template, kwds):
     kwds["cmake_options"] = template.cmake_options
     return default_create_extension(template, kwds)
 
+
 cythonized_ext_modules = cythonize(
     ext_modules,
     include_path=custom_include_paths,
@@ -139,24 +140,34 @@ cythonized_ext_modules = cythonize(
 for ext_module in cythonized_ext_modules:
     ext_module.include_dirs = custom_include_paths
 
+with open("README.md") as readme_file:
+    long_description = readme_file.read()
+
 setup(
     name='nod',
-    version="0.1.5",
+    version="0.1.6",
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=["nod"],
     scripts=[
     ],
     package_data={
     },
+    license='License :: OSI Approved :: MIT License',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 3 :: Only',
+        'License :: OSI Approved :: MIT License',
     ],
     install_requires=[],
     setup_requires=[
         'Cython',
+        'setuptools>=38.6.0',
+        'twine>=1.11.0',
+        'wheel>=0.31.0',
     ],
     cmdclass={
         'build_ext': CMakeBuild,
