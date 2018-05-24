@@ -50,17 +50,18 @@ private:
 	}
 };
 
-std::function<void(const std::string&, float)> createProgressCallbackFunction(PyObject * obj, void (*callback)(PyObject *, const std::string&, float)) {
+std::function<void(std::string_view, float)> createProgressCallbackFunction(PyObject * obj, void (*callback)(PyObject *, const std::string&, float)) {
 	PyObjectHolder holder(obj);
-    return [=](const std::string& s, float p) {
-        callback(holder.obj(), s, p);
+    return [=](std::string_view s, float p) {
+        callback(holder.obj(), std::string(s), p);
     };
 }
 
-nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject *, float, const nod::SystemString&, size_t)) {
+nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject *, float, const std::string&, size_t)) {
 	PyObjectHolder holder(obj);
-    return [=](float totalProg, const nod::SystemString& fileName, size_t fileBytesXfered) {
-        callback(holder.obj(), totalProg, fileName, fileBytesXfered);
+    return [=](float totalProg, nod::SystemStringView fileName, size_t fileBytesXfered) {
+		nod::SystemUTF8Conv utf8_str(fileName);
+        callback(holder.obj(), totalProg, std::string(utf8_str.c_str()), fileBytesXfered);
     };
 }
 

@@ -9,22 +9,38 @@ from libcpp.functional cimport function
 
 
 cdef extern from "string" namespace "std":
+    cdef cppclass string_view:
+        string_view()
+        string_view(char*)
+        # wrap-ignore
+
     cdef cppclass wstring:
         # wrap-ignore
+        wstring()
+        wstring(wchar_t*)
+        wstring(wstring_view)
         wchar_t* c_str()
+
+    cdef cppclass wstring_view:
+        wstring_view()
+        wstring_view(wchar_t*)
+        # wrap-ignore
+
 
 
 cdef extern from "nod/Util.hpp" namespace "nod":
     ctypedef wchar_t SystemChar
     ctypedef wstring SystemString
+    ctypedef wstring_view SystemStringView
 
-    cdef cppclass SystemUTF8View:
-        SystemUTF8View(SystemString)
-        string utf8_str()
+    cdef cppclass SystemUTF8Conv:
+        SystemUTF8Conv(SystemStringView)
+        char* utf8_str()
+        # lying to Cython here, since otherwise it believes we can't create a std::string from a string_view
 
-    cdef cppclass SystemStringView:
-        SystemStringView(string)
-        SystemString sys_str()
+    cdef cppclass SystemStringConv:
+        SystemStringConv(string_view)
+        SystemStringView sys_str()
 
 
 cdef extern from "nod/DiscBase.hpp" namespace "nod":
@@ -35,11 +51,11 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
     cdef EBuildResult EBuildResult_Failed "nod::EBuildResult::Failed"
     cdef EBuildResult EBuildResult_DiskFull "nod::EBuildResult::DiskFull"
 
-    ctypedef function[void(float, const SystemString&, size_t)] FProgress
+    ctypedef function[void(float, SystemStringView, size_t)] FProgress
 
     cdef cppclass DiscBase:
         cppclass IPartition:
-            c_bool extractToDirectory(const SystemString& path, const ExtractionContext& ctx) const
+            c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) const
 
         IPartition* getDataPartition()
         IPartition* getUpdatePartition()
@@ -47,21 +63,21 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 
 cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
     cdef cppclass DiscBuilderGCN:
-        DiscBuilderGCN(const SystemChar* outPath, FProgress progressCB)
-        EBuildResult buildFromDirectory(const SystemChar* dirIn)
+        DiscBuilderGCN(SystemStringView outPath, FProgress progressCB)
+        EBuildResult buildFromDirectory(SystemStringView dirIn)
 
         @staticmethod
-        uint64_t CalculateTotalSizeRequired(const SystemChar* dirIn)
+        uint64_t CalculateTotalSizeRequired(SystemStringView dirIn)
 
 
 cdef extern from "nod/nod.hpp" namespace "nod":
     cdef struct ExtractionContext:
         c_bool force
-        function[void(const string&, float)] progressCB
+        function[void(string_view, float)] progressCB
 
-    unique_ptr[DiscBase] OpenDiscFromImage(const SystemChar* path, c_bool& isWii)
+    unique_ptr[DiscBase] OpenDiscFromImage(SystemStringView path, c_bool& isWii)
 
 
 cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
-    function[void(const string&, float)] createProgressCallbackFunction(object, void (*)(object, string, float))
-    function[void(float, const SystemString&, size_t)] createFProgressFunction(object, void (*)(object, float, const SystemString&, size_t));
+    function[void(string_view, float)] createProgressCallbackFunction(object, void (*)(object, string, float))
+    function[void(float, SystemStringView, size_t)] createFProgressFunction(object, void (*)(object, float, string, size_t));
