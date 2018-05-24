@@ -10,14 +10,17 @@ from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
     string_view, \
     OpenDiscFromImage, SystemStringView, SystemUTF8Conv, SystemString, SystemStringConv, \
     DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
-    EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull
+    EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string
 
-#cdef SystemString _str_to_system_string(str path):
-#    return SystemString(SystemStringConv(string_view(path.encode("utf-8"))).sys_str())
+cdef SystemString _str_to_system_string(str path):
+    return string_to_system_string(path.encode("utf-8"))
+    #cdef string the_string = path.encode("utf-8")
+    #cdef string_view the_view = string_view(the_string.c_str())
+    #return SystemString(SystemStringConv(the_view).sys_str())
 
 # TODO: Returning a StringView like this seems like a bad idea: a pointer to already free'd memory
-cdef SystemStringView _str_to_system_string(str path):
-    return SystemStringConv(string_view(path.encode("utf-8"))).sys_str()
+#cdef SystemStringView _str_to_system_string(str path):
+#    return SystemStringConv(string_view(path.encode("utf-8"))).sys_str()
 
 
 ProgressCallback = Callable[[float, str, int], None]
@@ -55,8 +58,9 @@ cdef class Partition:
         return partition
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> bool:
+        cdef SystemString system_string = _str_to_system_string(path)
         return self.c_partition.extractToDirectory(
-            _str_to_system_string(path),
+            SystemStringView(system_string.c_str()),
             context.c_context
         )
 
@@ -93,23 +97,28 @@ cdef class DiscBuilderGCN:
         pass
 
     def __cinit__(self, out_path: str, progress_callback: ProgressCallback):
-        self.c_builder = new c_DiscBuilderGCN(_str_to_system_string(out_path),
+        cdef SystemString system_string = _str_to_system_string(out_path)
+        self.c_builder = new c_DiscBuilderGCN(SystemStringView(system_string.c_str()),
                                               createFProgressFunction(progress_callback, invoke_fprogress_function))
 
     def __dealloc__(self):
         del self.c_builder
 
     def build_from_directory(self, directory_in: str) -> BuildResult:
-        return convert_e_build_result(self.c_builder.buildFromDirectory(_str_to_system_string(directory_in)))
+        cdef SystemString system_string = _str_to_system_string(directory_in)
+        return convert_e_build_result(self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str())))
 
     @staticmethod
     def calculate_total_size_required(directory_in: str) -> int:
-        return c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_system_string(directory_in))
+        cdef SystemString system_string = _str_to_system_string(directory_in)
+        return c_DiscBuilderGCN.CalculateTotalSizeRequired(SystemStringView(system_string.c_str()))
 
 def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
     disc = DiscBase()
     cdef c_bool is_wii = True
-    disc.c_disc = OpenDiscFromImage(_str_to_system_string(path), is_wii)
+
+    cdef SystemString system_string = _str_to_system_string(path)
+    disc.c_disc = OpenDiscFromImage(SystemStringView(system_string.c_str()), is_wii)
 
     if disc.c_disc:
         return disc, is_wii

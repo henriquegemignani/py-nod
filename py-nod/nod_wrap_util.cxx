@@ -65,4 +65,9 @@ nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject
     };
 }
 
+nod::SystemString string_to_system_string(const std::string& s) {
+	nod::SystemStringConv conv(std::string_view(s.c_str()));
+	return nod::SystemString(conv.sys_str());
+}
+
 }
