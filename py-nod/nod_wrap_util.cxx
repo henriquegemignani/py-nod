@@ -2,6 +2,58 @@
 
 namespace nod_wrap {
 
+class LogvisorToExceptionConverter : public logvisor::ILogger {
+public:
+
+    void report(const char* modName, logvisor::Level severity,
+                const char* format, va_list ap) override
+    {
+		PyErr_FormatV(PyExc_RuntimeError, format, ap);
+    }
+
+    void report(const char* modName, logvisor::Level severity,
+                const wchar_t* format, va_list ap) override
+    {
+		auto correctSize = _vscwprintf(format, ap) + 1;
+		std::wstring buffer(correctSize, 0);
+		vswprintf(buffer.data(), correctSize, format, ap);
+
+		nod::SystemUTF8Conv conv(buffer.c_str());
+		PyErr_SetString(PyExc_RuntimeError, conv.c_str());
+    }
+
+    void reportSource(const char* modName, logvisor::Level severity,
+                      const char* file, unsigned linenum,
+                      const char* format, va_list ap) override
+    {
+        // openFile();
+        // char sourceInfo[128];
+        // snprintf(sourceInfo, 128, "%s:%u", file, linenum);
+        // _reportHead(modName, sourceInfo, severity);
+        // vfprintf(fp, format, ap);
+        // fprintf(fp, "\n");
+        // closeFile();
+    }
+
+    void reportSource(const char* modName, logvisor::Level severity,
+                      const char* file, unsigned linenum,
+                      const wchar_t* format, va_list ap) override
+    {
+        // openFile();
+        // char sourceInfo[128];
+        // snprintf(sourceInfo, 128, "%s:%u", file, linenum);
+        // _reportHead(modName, sourceInfo, severity);
+        // vfwprintf(fp, format, ap);
+        // fprintf(fp, "\n");
+        // closeFile();
+    }
+};
+
+namespace {
+	LogvisorToExceptionConverter* currentConverter = nullptr;
+}
+
+
 class PyObjectHolder {
 public:
 	PyObjectHolder(PyObject* the_obj)
@@ -68,6 +120,23 @@ nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject
 nod::SystemString string_to_system_string(const std::string& s) {
 	nod::SystemStringConv conv(std::string_view(s.c_str()));
 	return nod::SystemString(conv.sys_str());
+}
+
+void registerLogvisorToExceptionConverter() {
+	if (currentConverter) return;
+	auto lock = logvisor::LockLog();
+	logvisor::MainLoggers.emplace_back(currentConverter = new LogvisorToExceptionConverter);
+}
+
+void removeLogvisorToExceptionConverter() {
+	if (!currentConverter) return;
+	auto lock = logvisor::LockLog();
+	for (auto it = logvisor::MainLoggers.begin(); it != logvisor::MainLoggers.end(); ++it) {
+		if (it->get() == currentConverter) {
+			logvisor::MainLoggers.erase(it);
+			return;
+		}
+	}
 }
 
 }

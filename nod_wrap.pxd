@@ -82,3 +82,6 @@ cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
     function[void(string_view, float)] createProgressCallbackFunction(object, void (*)(object, const string&, float))
     function[void(float, SystemStringView, size_t)] createFProgressFunction(object, void (*)(object, float, const string&, size_t))
     SystemString string_to_system_string(const string&)
+
+    void registerLogvisorToExceptionConverter()
+    void removeLogvisorToExceptionConverter()

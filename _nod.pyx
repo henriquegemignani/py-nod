@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Tuple, Optional, Callable
+from contextlib import contextmanager
 
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
@@ -10,18 +11,11 @@ from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
     string_view, \
     OpenDiscFromImage, SystemStringView, SystemUTF8Conv, SystemString, SystemStringConv, \
     DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
-    EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string
+    EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string, \
+    registerLogvisorToExceptionConverter, removeLogvisorToExceptionConverter
 
 cdef SystemString _str_to_system_string(str path):
     return string_to_system_string(path.encode("utf-8"))
-    #cdef string the_string = path.encode("utf-8")
-    #cdef string_view the_view = string_view(the_string.c_str())
-    #return SystemString(SystemStringConv(the_view).sys_str())
-
-# TODO: Returning a StringView like this seems like a bad idea: a pointer to already free'd memory
-#cdef SystemStringView _str_to_system_string(str path):
-#    return SystemStringConv(string_view(path.encode("utf-8"))).sys_str()
-
 
 ProgressCallback = Callable[[float, str, int], None]
 
@@ -30,6 +24,12 @@ cdef void invoke_callback_function(object callback, const string& a, float progr
 
 cdef void invoke_fprogress_function(object callback, float totalProg, const string& fileName, size_t fileBytesXfered):
     callback(totalProg, fileName.decode("utf-8"), fileBytesXfered)
+
+@contextmanager
+def _log_exception_handler():
+    registerLogvisorToExceptionConverter()
+    yield
+    removeLogvisorToExceptionConverter()
 
 cdef class ExtractionContext:
     cdef c_ExtractionContext c_context
@@ -106,7 +106,8 @@ cdef class DiscBuilderGCN:
 
     def build_from_directory(self, directory_in: str) -> BuildResult:
         cdef SystemString system_string = _str_to_system_string(directory_in)
-        return convert_e_build_result(self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str())))
+        with _log_exception_handler():
+            return convert_e_build_result(self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str())))
 
     @staticmethod
     def calculate_total_size_required(directory_in: str) -> int:

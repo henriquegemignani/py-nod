@@ -10,4 +10,7 @@ std::function<void(std::string_view, float)> createProgressCallbackFunction(PyOb
 nod::FProgress createFProgressFunction(PyObject *, void (*)(PyObject *, float, const std::string&, size_t));
 nod::SystemString string_to_system_string(const std::string&);
 
+void registerLogvisorToExceptionConverter();
+void removeLogvisorToExceptionConverter();
+
 } // namespace nod_wrap
