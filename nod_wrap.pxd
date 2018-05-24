@@ -53,10 +53,10 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 
     ctypedef function[void(float, SystemStringView, size_t)] FProgress
 
-    cdef cppclass DiscBase:
-        cppclass IPartition:
-            c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) const
+    cppclass IPartition:
+        c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) const
 
+    cdef cppclass DiscBase:
         IPartition* getDataPartition()
         IPartition* getUpdatePartition()
 
