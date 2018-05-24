@@ -64,7 +64,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
     cdef cppclass DiscBuilderGCN:
         DiscBuilderGCN(SystemStringView outPath, FProgress progressCB)
-        EBuildResult buildFromDirectory(SystemStringView dirIn)
+        EBuildResult buildFromDirectory(SystemStringView dirIn) except *
 
         @staticmethod
         uint64_t CalculateTotalSizeRequired(SystemStringView dirIn)

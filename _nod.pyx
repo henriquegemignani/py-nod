@@ -74,21 +74,6 @@ cdef class DiscBase:
         else:
             return None
 
-class BuildResult(Enum):
-    Success = 1
-    Failed = 2
-    DiskFull = 3
-
-
-cdef object convert_e_build_result(EBuildResult result):
-    if result == EBuildResult_Success:
-        return BuildResult.Success
-    elif result == EBuildResult_Failed:
-        return BuildResult.Failed
-    elif result == EBuildResult_DiskFull:
-        return BuildResult.DiskFull
-    else:
-        raise ValueError("Unknown EBuildResult")
 
 cdef class DiscBuilderGCN:
     cdef c_DiscBuilderGCN* c_builder
@@ -104,10 +89,10 @@ cdef class DiscBuilderGCN:
     def __dealloc__(self):
         del self.c_builder
 
-    def build_from_directory(self, directory_in: str) -> BuildResult:
+    def build_from_directory(self, directory_in: str) -> None:
         cdef SystemString system_string = _str_to_system_string(directory_in)
         with _log_exception_handler():
-            return convert_e_build_result(self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str())))
+            self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str()))
 
     @staticmethod
     def calculate_total_size_required(directory_in: str) -> int:
