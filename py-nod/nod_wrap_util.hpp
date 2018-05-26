@@ -12,5 +12,6 @@ nod::SystemString string_to_system_string(const std::string&);
 
 void registerLogvisorToExceptionConverter();
 void removeLogvisorToExceptionConverter();
+PyObject * _handleNativeException(PyObject *);
 
 } // namespace nod_wrap

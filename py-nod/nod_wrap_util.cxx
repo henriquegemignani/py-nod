@@ -2,6 +2,8 @@
 
 namespace nod_wrap {
 
+struct BreakOutFromNative {};
+
 class LogvisorToExceptionConverter : public logvisor::ILogger {
 public:
 
@@ -107,6 +109,9 @@ std::function<void(std::string_view, float)> createProgressCallbackFunction(PyOb
     return [=](std::string_view s, float p) {
 		if (holder.obj() != Py_None) {
         	callback(holder.obj(), std::string(s), p);
+			if (PyErr_Occurred()) {
+				throw BreakOutFromNative();
+			}
 		}
     };
 }
@@ -117,6 +122,9 @@ nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject
 		if (holder.obj() != Py_None) {
 			nod::SystemUTF8Conv utf8_str(fileName);
         	callback(holder.obj(), totalProg, std::string(utf8_str.c_str()), fileBytesXfered);
+			if (PyErr_Occurred()) {
+				throw BreakOutFromNative();
+			}
 		}
     };
 }
@@ -140,6 +148,16 @@ void removeLogvisorToExceptionConverter() {
 			logvisor::MainLoggers.erase(it);
 			return;
 		}
+	}
+}
+
+PyObject * _handleNativeException(PyObject * callable) {
+	if (PyErr_Occurred())
+		return NULL;
+	try {
+		return PyObject_CallFunction(callable, NULL);
+	} catch (BreakOutFromNative) {
+		return NULL;
 	}
 }
 

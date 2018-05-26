@@ -12,17 +12,17 @@ from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
     OpenDiscFromImage, SystemStringView, SystemUTF8Conv, SystemString, SystemStringConv, \
     DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
     EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string, \
-    registerLogvisorToExceptionConverter, removeLogvisorToExceptionConverter
+    registerLogvisorToExceptionConverter, removeLogvisorToExceptionConverter, _handleNativeException
 
 cdef SystemString _str_to_system_string(str path):
     return string_to_system_string(path.encode("utf-8"))
 
 ProgressCallback = Callable[[float, str, int], None]
 
-cdef void invoke_callback_function(object callback, const string& a, float progress):
+cdef void invoke_callback_function(object callback, const string& a, float progress) except *:
     callback(a.decode("utf-8"), progress)
 
-cdef void invoke_fprogress_function(object callback, float totalProg, const string& fileName, size_t fileBytesXfered):
+cdef void invoke_fprogress_function(object callback, float totalProg, const string& fileName, size_t fileBytesXfered) except *:
     callback(totalProg, fileName.decode("utf-8"), fileBytesXfered)
 
 @contextmanager
@@ -58,11 +58,13 @@ cdef class Partition:
         return partition
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> bool:
-        cdef SystemString system_string = _str_to_system_string(path)
-        return self.c_partition.extractToDirectory(
-            SystemStringView(system_string.c_str()),
-            context.c_context
-        )
+        def work():
+            cdef SystemString system_string = _str_to_system_string(path)
+            return self.c_partition.extractToDirectory(
+                SystemStringView(system_string.c_str()),
+                context.c_context
+            )
+        return _handleNativeException(work)
 
 cdef class DiscBase:
     cdef unique_ptr[c_DiscBase] c_disc
@@ -90,9 +92,12 @@ cdef class DiscBuilderGCN:
         del self.c_builder
 
     def build_from_directory(self, directory_in: str) -> None:
-        cdef SystemString system_string = _str_to_system_string(directory_in)
-        with _log_exception_handler():
-            self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str()))
+        def work():
+            cdef SystemString system_string = _str_to_system_string(directory_in)
+            with _log_exception_handler():
+                self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str()))
+        return _handleNativeException(work)
+        
 
     @staticmethod
     def calculate_total_size_required(directory_in: str) -> int:

@@ -54,7 +54,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
     ctypedef function[void(float, SystemStringView, size_t)] FProgress
 
     cppclass IPartition:
-        c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) const
+        c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) except * const
 
     cdef cppclass DiscBase:
         IPartition* getDataPartition()
@@ -79,9 +79,10 @@ cdef extern from "nod/nod.hpp" namespace "nod":
 
 
 cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
-    function[void(string_view, float)] createProgressCallbackFunction(object, void (*)(object, const string&, float))
-    function[void(float, SystemStringView, size_t)] createFProgressFunction(object, void (*)(object, float, const string&, size_t))
+    function[void(string_view, float)] createProgressCallbackFunction(object, void (*)(object, const string&, float) except *)
+    function[void(float, SystemStringView, size_t)] createFProgressFunction(object, void (*)(object, float, const string&, size_t) except *)
     SystemString string_to_system_string(const string&)
 
     void registerLogvisorToExceptionConverter()
     void removeLogvisorToExceptionConverter()
+    object _handleNativeException(object)
