@@ -53,9 +53,15 @@ class Commands:
             raise SystemExit(2)
 
         disc_builder = nod.DiscBuilderGCN(self.args.image_out, self.fprogress_callback)
-        disc_builder.build_from_directory(filesystem_root)
-        if self.args.verbose:
-            print()
+        try:
+            disc_builder.build_from_directory(filesystem_root)
+            if self.args.verbose:
+                print()
+        except RuntimeError as e:
+            print("Error when trying to create an ISO at '{}' with '{}' as input: {}".format(
+                self.args.image_out, filesystem_root, e
+            ))
+            raise SystemExit(3)
 
 
     def execute(self):
