@@ -13,5 +13,6 @@ nod::SystemString string_to_system_string(const std::string&);
 void registerLogvisorToExceptionConverter();
 void removeLogvisorToExceptionConverter();
 PyObject * _handleNativeException(PyObject *);
+inline void checkException() {}
 
 } // namespace nod_wrap

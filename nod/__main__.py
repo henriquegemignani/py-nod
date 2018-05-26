@@ -17,10 +17,11 @@ class Commands:
     def extract(self):
         args = self.args
 
-        result = nod.open_disc_from_image(args.image_in)
-        if not result:
+        try:
+            result = nod.open_disc_from_image(args.image_in)
+        except RuntimeError as e:
             if args.verbose:
-                print("Could not open disc from '{}'.".format(args.image_in))
+                print("Could not open disc from '{}': {}".format(args.image_in, e))
             raise SystemExit(1)
 
         disc, is_wii = result

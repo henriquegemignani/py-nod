@@ -12,7 +12,7 @@ from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
     OpenDiscFromImage, SystemStringView, SystemUTF8Conv, SystemString, SystemStringConv, \
     DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
     EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string, \
-    registerLogvisorToExceptionConverter, removeLogvisorToExceptionConverter, _handleNativeException
+    registerLogvisorToExceptionConverter, removeLogvisorToExceptionConverter, _handleNativeException, checkException
 
 cdef SystemString _str_to_system_string(str path):
     return string_to_system_string(path.encode("utf-8"))
@@ -60,10 +60,11 @@ cdef class Partition:
     def extract_to_directory(self, path: str, context: ExtractionContext) -> bool:
         def work():
             cdef SystemString system_string = _str_to_system_string(path)
-            return self.c_partition.extractToDirectory(
-                SystemStringView(system_string.c_str()),
-                context.c_context
-            )
+            with _log_exception_handler():
+                return self.c_partition.extractToDirectory(
+                    SystemStringView(system_string.c_str()),
+                    context.c_context
+                )
         return _handleNativeException(work)
 
 cdef class DiscBase:
@@ -105,13 +106,13 @@ cdef class DiscBuilderGCN:
         return c_DiscBuilderGCN.CalculateTotalSizeRequired(SystemStringView(system_string.c_str()))
 
 def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
-    disc = DiscBase()
-    cdef c_bool is_wii = True
+    def work():
+        disc = DiscBase()
+        cdef c_bool is_wii = True
 
-    cdef SystemString system_string = _str_to_system_string(path)
-    disc.c_disc = OpenDiscFromImage(SystemStringView(system_string.c_str()), is_wii)
-
-    if disc.c_disc:
-        return disc, is_wii
-    else:
-        return None
+        cdef SystemString system_string = _str_to_system_string(path)
+        with _log_exception_handler():
+            disc.c_disc = OpenDiscFromImage(SystemStringView(system_string.c_str()), is_wii)
+            checkException()
+            return disc, is_wii
+    return _handleNativeException(work)
