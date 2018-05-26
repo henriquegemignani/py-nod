@@ -17,20 +17,6 @@ class Commands:
     def extract(self):
         args = self.args
 
-        try:
-            result = nod.open_disc_from_image(args.image_in)
-        except RuntimeError as e:
-            if args.verbose:
-                print("Could not open disc from '{}': {}".format(args.image_in, e))
-            raise SystemExit(1)
-
-        disc, is_wii = result
-        data_partition = disc.get_data_partition()
-        if not data_partition:
-            if args.verbose:
-                print("Could not find a data partition in the disc.")
-            raise SystemExit(2)
-
         def progress_callback(path, progress):
             if args.verbose:
                 print("Extraction {:.0%} Complete; Current node: {}".format(progress, path))
@@ -38,9 +24,17 @@ class Commands:
         context = nod.ExtractionContext()
         context.set_progress_callback(progress_callback)
 
-        if not data_partition.extract_to_directory(args.directory_out, context):
+        try:
+            disc, is_wii = nod.open_disc_from_image(args.image_in)
+            data_partition = disc.get_data_partition()
+            if not data_partition:
+                raise RuntimeError("Could not find a data partition in the disc.")
+            data_partition.extract_to_directory(args.directory_out, context)
+        
+        except RuntimeError as e:
             if args.verbose:
-                print("Could not extract to '{}'".format(args.directory_out))
+                print("Could not extract disc at '{}' to '{}': {}".format(args.image_in, args.directory_out, e))
+            raise SystemExit(1)
 
     def makegcn(self):
         filesystem_root = self.args.filesystem_root

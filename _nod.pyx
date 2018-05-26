@@ -57,14 +57,16 @@ cdef class Partition:
         partition.c_partition = c_partition
         return partition
 
-    def extract_to_directory(self, path: str, context: ExtractionContext) -> bool:
+    def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():
             cdef SystemString system_string = _str_to_system_string(path)
             with _log_exception_handler():
-                return self.c_partition.extractToDirectory(
+                extraction_successful = self.c_partition.extractToDirectory(
                     SystemStringView(system_string.c_str()),
                     context.c_context
                 )
+            if not extraction_successful:
+                raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
 
 cdef class DiscBase:
