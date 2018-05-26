@@ -105,15 +105,19 @@ private:
 std::function<void(std::string_view, float)> createProgressCallbackFunction(PyObject * obj, void (*callback)(PyObject *, const std::string&, float)) {
 	PyObjectHolder holder(obj);
     return [=](std::string_view s, float p) {
-        callback(holder.obj(), std::string(s), p);
+		if (holder.obj() != Py_None) {
+        	callback(holder.obj(), std::string(s), p);
+		}
     };
 }
 
 nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject *, float, const std::string&, size_t)) {
 	PyObjectHolder holder(obj);
     return [=](float totalProg, nod::SystemStringView fileName, size_t fileBytesXfered) {
-		nod::SystemUTF8Conv utf8_str(fileName);
-        callback(holder.obj(), totalProg, std::string(utf8_str.c_str()), fileBytesXfered);
+		if (holder.obj() != Py_None) {
+			nod::SystemUTF8Conv utf8_str(fileName);
+        	callback(holder.obj(), totalProg, std::string(utf8_str.c_str()), fileBytesXfered);
+		}
     };
 }
 
