@@ -146,6 +146,7 @@ void removeLogvisorToExceptionConverter() {
 	for (auto it = logvisor::MainLoggers.begin(); it != logvisor::MainLoggers.end(); ++it) {
 		if (it->get() == currentConverter) {
 			logvisor::MainLoggers.erase(it);
+            currentConverter = nullptr;
 			return;
 		}
 	}
