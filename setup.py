@@ -165,7 +165,7 @@ setup(
     ],
     install_requires=[],
     setup_requires=[
-        'Cython',
+        'Cython>=0.27.0',
         'setuptools>=38.6.0',
         'twine>=1.11.0',
         'wheel>=0.31.0',
