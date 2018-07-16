@@ -16,12 +16,14 @@ public:
     void report(const char* modName, logvisor::Level severity,
                 const wchar_t* format, va_list ap) override
     {
+#ifdef _WIN32
 		auto correctSize = _vscwprintf(format, ap) + 1;
 		std::wstring buffer(correctSize, 0);
 		vswprintf(buffer.data(), correctSize, format, ap);
 
 		nod::SystemUTF8Conv conv(buffer.c_str());
 		PyErr_SetString(PyExc_RuntimeError, conv.c_str());
+#endif
     }
 
     void reportSource(const char* modName, logvisor::Level severity,
