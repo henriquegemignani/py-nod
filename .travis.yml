@@ -1,0 +1,21 @@
+sudo: required
+
+language: python
+python:
+    - "3.5"
+    - "3.6"
+
+services:
+    - docker
+
+before_install:
+    - env
+    - docker pull henriquegemignani/docker-nod-ci
+
+install:
+    - python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0
+
+script:
+    - python -c 'import sys; print("{0.major}{0.minor}".format(sys.version_info))' > .python-version
+    - docker run --rm -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci /host/travis-scripts/build.sh
+    - python -m pip install --upgrade dist/*
