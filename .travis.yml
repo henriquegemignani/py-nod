@@ -6,14 +6,11 @@ python:
 services:
 - docker
 deploy:
-  provider: pypi
-  user: henriquegemignani
-  password:
-    secure: sT9A3FfUy8hQxywmC9DRsvSHVJ5AdDBaR2JLF2OgZKUVoS4ckLMShe7scQZ5XqONp8tO9QNMnGkQN3ljvlB3sK/Dt3n8H5oxPGm4OgAxNVlL9MtQ2fWyqMTsYAnjevT/DDp8e39bPbVbADF3Il74qEZV3c3tn3F3nUTVDR9lfke0KwLoQW5fJ7MZvi1vvF0aBD8Q7TTj8hjWIg3qgOum75vmGWwNp/gevuSszy3eBICwbNwkqOd2u/c4OIJTC80pQfoBXlHiMMjIrfBpEn8FqHCOoL2Hc0npq2bJqLQUDvgOqerMIxkL/R698pwbj4m71Yo0SLJMhCbkIPP0wuJDE2WcHOs7wZmGTJRZK88IxBKoy0Uza/hcY9BSx2JP1POnyrj25Dl1T1pkXXytjbzdg6bjBir2Dggts5T4G6wq+xtVU+KzXz7E04qzl9AMLex9yYcolY3LD5/NfjpD1+rE/rvkaD2K+X9Bk1u94+P+gkrWHL+FPnGu0gTa79oTet5SfBQoQWsf9Yl+u6ARA+KdMqSUOMGBw7ofwj2NquqPgTZNhCDJiW4ns68lAfheXnOQqaKNY1o4S8oyj4qgDYXVfhRlYNQiXbdVZ8oGixEO3czwulrGAEblRei73R8mZsK0w8TC9IsvexmxEB/w/1TEjp+Wg4x5txlAyqvZn2QdyQg=
+  provider: script
+  script: python -m twine upload dist/*.whl
   on:
     tags: true
 before_install:
-- env
 - docker pull henriquegemignani/docker-nod-ci
 install:
 - python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0
