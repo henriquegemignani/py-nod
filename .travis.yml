@@ -17,6 +17,7 @@ matrix:
       services: docker
       python: 3.6
       env:
+        - INCLUDE_SDIST=true
         - RUN="docker run --rm -e PYTHON_VERSION=cp36-cp36m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
 
     - os: osx
@@ -36,6 +37,7 @@ matrix:
 deploy:
   provider: script
   script: python -m twine upload dist/*.whl
+  skip_cleanup: true
   on:
     tags: true
 
@@ -55,3 +57,4 @@ script:
 - $RUN ./travis-scripts/build.sh
 - python -m pip install --upgrade dist/*
 - python -m pytest
+- if [[ "$INCLUDE_SDIST" == "true" ]]; then python setup.py sdist fi
