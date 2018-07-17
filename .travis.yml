@@ -56,6 +56,7 @@ install:
 
 script:
 - $RUN ./travis-scripts/build.sh
+- sudo chown -R $(whoami) .
 - python -m pip install --upgrade dist/*
 - python -m pytest
 - if [[ "$INCLUDE_SDIST" == "true" ]]; then python setup.py sdist; fi
