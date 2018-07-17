@@ -33,7 +33,7 @@ test_script:
   # the interpreter you're using - Appveyor does not do anything special
   # to put the Python version you want to use on PATH.
   - "%PYTHON%\\python.exe setup.py bdist_wheel"
-  - "%PYTHON%\\python.exe -m pip install dist\\*.whl"
+  - "%PYTHON%\\python.exe setup.py develop"
   - "%PYTHON%\\python.exe -m pytest"
 
 after_test:
