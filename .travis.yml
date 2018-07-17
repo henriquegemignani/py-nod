@@ -57,4 +57,4 @@ script:
 - $RUN ./travis-scripts/build.sh
 - python -m pip install --upgrade dist/*
 - python -m pytest
-- if [[ "$INCLUDE_SDIST" == "true" ]]; then python setup.py sdist fi
+- if [[ "$INCLUDE_SDIST" == "true" ]]; then python setup.py sdist; fi
