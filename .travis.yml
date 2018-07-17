@@ -2,6 +2,7 @@ language: python
 sudo: required
 
 cache:
+  - pip
   - directories:
     - $HOME/.pyenv_cache
 
