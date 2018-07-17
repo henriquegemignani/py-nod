@@ -32,9 +32,9 @@ test_script:
   # Note that you must use the environment variable %PYTHON% to refer to
   # the interpreter you're using - Appveyor does not do anything special
   # to put the Python version you want to use on PATH.
-  - "%PYTHON%\\python.exe setup.py bdist_wheel"
-  - "%PYTHON%\\python.exe -m pip install dist\*.whl"
-  - "%PYTHON%\\python.exe -m pytest"
+  - "%PYTHON%\\python.exe" setup.py bdist_wheel
+  - "%PYTHON%\\python.exe" -m pip install dist\*.whl
+  - "%PYTHON%\\python.exe" -m pytest
 
 after_test:
   # This step builds your wheels.
