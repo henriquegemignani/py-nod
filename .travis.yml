@@ -51,7 +51,7 @@ before_install:
 - python --version
 
 install:
-- python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0 pytest
+- python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0 pytest Cython
 
 script:
 - $RUN ./travis-scripts/build.sh
