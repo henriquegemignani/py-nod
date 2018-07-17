@@ -1,20 +1,56 @@
-sudo: required
 language: python
-python:
-- '3.5'
-- '3.6'
-services:
-- docker
+sudo: required
+
+cache:
+  - directories:
+    - $HOME/.pyenv_cache
+
+matrix:
+  include:
+    - os: linux
+      services: docker
+      python: 3.5
+      env:
+        - RUN="docker run --rm -e PYTHON_VERSION=cp35-cp35m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
+
+    - os: linux
+      services: docker
+      python: 3.6
+      env:
+        - RUN="docker run --rm -e PYTHON_VERSION=cp36-cp36m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
+
+    - os: osx
+      osx_image: xcode9.4
+      language: generic
+      env:
+        - PYENV_VERSION=3.6.5
+        - RUN=bash
+
+    - os: osx
+      osx_image: xcode9.4
+      language: generic
+      env:
+        - PYENV_VERSION=3.7.0
+        - RUN=bash
+
 deploy:
   provider: script
   script: python -m twine upload dist/*.whl
   on:
     tags: true
+
 before_install:
-- docker pull henriquegemignani/docker-nod-ci
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull henriquegemignani/docker-nod-ci; fi
+- |
+      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.4.0/setup-pyenv.sh
+        source setup-pyenv.sh
+      fi
+- python --version
+
 install:
-- python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0
+- python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0 pytest
+
 script:
-- python -c 'import sys; print("{0.major}{0.minor}".format(sys.version_info))' > .python-version
-- docker run --rm -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci /host/travis-scripts/build.sh
+- $RUN ./travis-scripts/build.sh
 - python -m pip install --upgrade dist/*
