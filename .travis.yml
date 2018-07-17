@@ -54,3 +54,4 @@ install:
 script:
 - $RUN ./travis-scripts/build.sh
 - python -m pip install --upgrade dist/*
+- python -m pytest
