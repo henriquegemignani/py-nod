@@ -12,7 +12,8 @@ python -m pip install Cython
 python setup.py bdist_wheel
 
 if [ -n "$PYTHON_VERSION" ]; then
-    auditwheel repair dist/*.whl
+    auditwheel repair dist/nod-*-linux_x86_64.whl -w dir
+    rm dist/nod-*-linux_x86_64.whl
 fi
 
 echo "Resulting files: "
