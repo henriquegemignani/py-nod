@@ -146,7 +146,7 @@ with open("README.md") as readme_file:
 
 setup(
     name='nod',
-    version="1.0.2",
+    version="1.0.3",
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
