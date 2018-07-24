@@ -100,12 +100,15 @@ cdef class DiscBuilderGCN:
             with _log_exception_handler():
                 self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str()))
         return _handleNativeException(work)
-        
+
 
     @staticmethod
-    def calculate_total_size_required(directory_in: str) -> int:
+    def calculate_total_size_required(directory_in: str) -> Optional[int]:
         cdef SystemString system_string = _str_to_system_string(directory_in)
-        return c_DiscBuilderGCN.CalculateTotalSizeRequired(SystemStringView(system_string.c_str()))
+        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(SystemStringView(system_string.c_str()))
+        if size:
+            return size.value()
+        return None
 
 def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
     def work():

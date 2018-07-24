@@ -26,6 +26,9 @@ cdef extern from "string" namespace "std":
         wstring_view(wchar_t*)
         # wrap-ignore
 
+    cdef cppclass optional[T]:
+        c_bool operator bool()
+        T& value()
 
 
 cdef extern from "nod/Util.hpp" namespace "nod":
@@ -67,7 +70,7 @@ cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
         EBuildResult buildFromDirectory(SystemStringView dirIn) except *
 
         @staticmethod
-        uint64_t CalculateTotalSizeRequired(SystemStringView dirIn)
+        optional[uint64_t] CalculateTotalSizeRequired(SystemStringView dirIn)
 
 
 cdef extern from "nod/nod.hpp" namespace "nod":

@@ -30,7 +30,7 @@ class Commands:
             if not data_partition:
                 raise RuntimeError("Could not find a data partition in the disc.")
             data_partition.extract_to_directory(args.directory_out, context)
-        
+
         except RuntimeError as e:
             if args.verbose:
                 print("Could not extract disc at '{}' to '{}': {}".format(args.image_in, args.directory_out, e))
@@ -43,7 +43,7 @@ class Commands:
             print("Error, '{}' is not a directory.".format(filesystem_root))
             raise SystemExit(1)
 
-        if nod.DiscBuilderGCN.calculate_total_size_required(filesystem_root) == -1:
+        if nod.DiscBuilderGCN.calculate_total_size_required(filesystem_root) is None:
             print("Image built with given directory would pass the maximum size.")
             raise SystemExit(2)
 
