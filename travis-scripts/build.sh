@@ -14,3 +14,6 @@ python setup.py bdist_wheel
 if [ -n "$PYTHON_VERSION" ]; then
     auditwheel repair dist/*.whl
 fi
+
+echo "Resulting files: "
+ls -la dist/
