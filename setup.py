@@ -13,6 +13,8 @@ from setuptools.extension import Extension
 
 is_windows = platform.system() == "Windows"
 
+file_dir = os.path.dirname(__file__)
+
 
 class CMakeExtension(Extension):
     def __init__(self, name, sources, cmake_options, *args, **kw):
@@ -110,7 +112,10 @@ else:
 ext_modules = [
     CMakeExtension(
         "_nod",
-        ["_nod.pyx", "py-nod/nod_wrap_util.cxx"],
+        [
+			os.path.join(file_dir, "_nod.pyx"),
+			os.path.join(file_dir, "py-nod/nod_wrap_util.cxx")
+		],
         cmake_options={
             "dir": nod_submodule,
             "targets": {
@@ -141,12 +146,23 @@ cythonized_ext_modules = cythonize(
 for ext_module in cythonized_ext_modules:
     ext_module.include_dirs = custom_include_paths
 
-with open("README.md") as readme_file:
+with open(os.path.join(file_dir, "README.md")) as readme_file:
     long_description = readme_file.read()
-
+	
+VERSION = None
+with open(os.path.join(file_dir, "nod", "__init__.py")) as init_file:
+	version_re = re.compile('VERSION\s*=\s*"([^"]+)"')
+	for init_line in init_file:
+		version_match = version_re.match(init_line)
+		if version_match:
+			VERSION = version_match.group(1)
+	
+if VERSION is None:
+	raise Exception("Unable to find version in __init__.py")
+	
 setup(
     name='nod',
-    version="1.0.3",
+    version=VERSION,
     author='Henrique Gemignani',
     url='https://github.com/henriquegemignani/py-nod',
     description='Python bindings for the nod library.',
