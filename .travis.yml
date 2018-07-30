@@ -37,7 +37,7 @@ matrix:
 
 deploy:
   provider: script
-  script: python -m twine upload dist/*.whl
+  script: python -m twine upload dist/*
   skip_cleanup: true
   on:
     tags: true
