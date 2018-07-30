@@ -113,9 +113,9 @@ ext_modules = [
     CMakeExtension(
         "_nod",
         [
-			os.path.join(file_dir, "_nod.pyx"),
-			os.path.join(file_dir, "py-nod/nod_wrap_util.cxx")
-		],
+            os.path.join(file_dir, "_nod.pyx"),
+            os.path.join(file_dir, "py-nod/nod_wrap_util.cxx")
+        ],
         cmake_options={
             "dir": nod_submodule,
             "targets": {
@@ -140,6 +140,7 @@ def create_extension(template, kwds):
 cythonized_ext_modules = cythonize(
     ext_modules,
     include_path=custom_include_paths,
+    compiler_directives={'embedsignature': True},
     create_extension=create_extension,
 )
 
@@ -148,18 +149,18 @@ for ext_module in cythonized_ext_modules:
 
 with open(os.path.join(file_dir, "README.md")) as readme_file:
     long_description = readme_file.read()
-	
+
 VERSION = None
 with open(os.path.join(file_dir, "nod", "__init__.py")) as init_file:
-	version_re = re.compile('VERSION\s*=\s*"([^"]+)"')
-	for init_line in init_file:
-		version_match = version_re.match(init_line)
-		if version_match:
-			VERSION = version_match.group(1)
-	
+    version_re = re.compile('VERSION\s*=\s*"([^"]+)"')
+    for init_line in init_file:
+        version_match = version_re.match(init_line)
+        if version_match:
+            VERSION = version_match.group(1)
+
 if VERSION is None:
-	raise Exception("Unable to find version in __init__.py")
-	
+    raise Exception("Unable to find version in __init__.py")
+
 setup(
     name='nod',
     version=VERSION,
