@@ -32,7 +32,7 @@ except RuntimeError as e:
 ```python
 import nod
 
-if nod.DiscBuilderGCN.calculate_total_size_required("dir_out") == -1:
+if nod.DiscBuilderGCN.calculate_total_size_required("dir_out") is None:
     raise Exception("Image built with given directory would pass the maximum size.")
 
 def fprogress_callback(progress: float, name: str, bytes: int):
