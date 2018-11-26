@@ -60,7 +60,7 @@ before_install:
 
 install:
 - python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0 pytest Cython
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python -m pip install git+https://github.com/wtolson/pip@manylinux2010; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python -m pip install git+https://github.com/pypa/pip; fi
 
 script:
 - $RUN ./travis-scripts/build.sh
