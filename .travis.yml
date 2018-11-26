@@ -28,6 +28,7 @@ matrix:
       env:
         - RUN="docker run --rm -e PYTHON_VERSION=cp37-cp37m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
 
+  allow_failures:
     - os: osx
       osx_image: xcode10
       language: generic
