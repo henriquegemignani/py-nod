@@ -28,7 +28,7 @@ cdef extern from "string" namespace "std":
 
     cdef cppclass optional[T]:
         c_bool operator bool()
-        T& value()
+        T& operator*()
 
 
 cdef extern from "nod/Util.hpp" namespace "nod":

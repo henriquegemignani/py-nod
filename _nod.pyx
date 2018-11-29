@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Tuple, Optional, Callable
 from contextlib import contextmanager
 
+import cython
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
@@ -107,7 +108,7 @@ cdef class DiscBuilderGCN:
         cdef SystemString system_string = _str_to_system_string(directory_in)
         size = c_DiscBuilderGCN.CalculateTotalSizeRequired(SystemStringView(system_string.c_str()))
         if size:
-            return size.value()
+            return cython.operator.dereference(size)
         return None
 
 def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
