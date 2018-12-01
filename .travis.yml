@@ -41,9 +41,6 @@ matrix:
       env:
         - PYENV_VERSION=3.7.0
         - RUN=bash
-        
-  allow_failures:
-    - os: osx
 
 deploy:
   provider: script
