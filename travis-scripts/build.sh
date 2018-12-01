@@ -12,7 +12,7 @@ python -m pip install Cython
 python setup.py bdist_wheel
 
 if [ -n "$PYTHON_VERSION" ]; then
-    auditwheel repair dist/nod-*-linux_x86_64.whl -w dist
+    python -m auditwheel repair --plat manylinux2010_x86_64 dist/nod-*-linux_x86_64.whl -w dist
     rm dist/nod-*-linux_x86_64.whl
 fi
 
