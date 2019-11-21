@@ -7,20 +7,17 @@ struct BreakOutFromNative {};
 class LogvisorToExceptionConverter : public logvisor::ILogger {
 public:
 
-    void report(const char* modName, logvisor::Level severity,
-                const char* format, va_list ap) override
+
+    void report(const char* modName, logvisor::Level severity, fmt::string_view format, fmt::format_args args) override
     {
-		PyErr_FormatV(PyExc_RuntimeError, format, ap);
+        auto error_message = fmt::vformat(format, args);
+		PyErr_SetString(PyExc_RuntimeError, error_message.c_str());
     }
 
-    void report(const char* modName, logvisor::Level severity,
-                const wchar_t* format, va_list ap) override
+    void report(const char* modName, logvisor::Level severity, fmt::wstring_view format, fmt::wformat_args args) override
     {
-#ifdef _WIN32
-		auto correctSize = _vscwprintf(format, ap) + 1;
-		std::wstring buffer(correctSize, 0);
-		vswprintf(buffer.data(), correctSize, format, ap);
-
+#ifdef UNICODE
+        auto buffer = fmt::vformat(format, args);
 		nod::SystemUTF8Conv conv(buffer.c_str());
 		PyErr_SetString(PyExc_RuntimeError, conv.c_str());
 #endif
@@ -28,7 +25,7 @@ public:
 
     void reportSource(const char* modName, logvisor::Level severity,
                       const char* file, unsigned linenum,
-                      const char* format, va_list ap) override
+                      fmt::string_view format, fmt::format_args args) override
     {
         // openFile();
         // char sourceInfo[128];
@@ -41,7 +38,7 @@ public:
 
     void reportSource(const char* modName, logvisor::Level severity,
                       const char* file, unsigned linenum,
-                      const wchar_t* format, va_list ap) override
+                      fmt::wstring_view format, fmt::wformat_args args) override
     {
         // openFile();
         // char sourceInfo[128];
