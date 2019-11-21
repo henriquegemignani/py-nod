@@ -28,18 +28,32 @@ matrix:
       env:
         - RUN="docker run --rm -e PYTHON_VERSION=cp37-cp37m -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
 
+    - os: linux
+      services: docker
+      dist: xenial
+      python: 3.8
+      env:
+        - RUN="docker run --rm -e PYTHON_VERSION=cp38-cp38 -v $(pwd):/host -w /host henriquegemignani/docker-nod-ci"
+
     - os: osx
-      osx_image: xcode10
+      osx_image: xcode11
       language: generic
       env:
-        - PYENV_VERSION=3.6.5
+        - PYENV_VERSION=3.6.9
         - RUN=bash
 
     - os: osx
-      osx_image: xcode10
+      osx_image: xcode11
       language: generic
       env:
-        - PYENV_VERSION=3.7.0
+        - PYENV_VERSION=3.7.5
+        - RUN=bash
+
+    - os: osx
+      osx_image: xcode11
+      language: generic
+      env:
+        - PYENV_VERSION=3.8.0
         - RUN=bash
 
 deploy:
@@ -59,8 +73,7 @@ before_install:
 - python --version
 
 install:
-- python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0 pytest Cython
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python -m pip install git+https://github.com/pypa/pip; fi
+- python -m pip install --upgrade setuptools>=38.6.0 twine>=1.11.0 wheel>=0.31.0 pytest pip Cython
 
 script:
 - $RUN ./travis-scripts/build.sh
