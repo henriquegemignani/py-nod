@@ -107,6 +107,7 @@ extra_compile_args = []
 if is_windows:
     extra_compile_args.append("-DUNICODE")
     extra_compile_args.append("/std:c++17")
+    extra_compile_args.append("/MD")
 else:
     extra_compile_args.append("-std=c++17")
 
@@ -142,7 +143,10 @@ def create_extension(template, kwds):
 cythonized_ext_modules = cythonize(
     ext_modules,
     include_path=custom_include_paths,
-    compiler_directives={'embedsignature': True},
+    compiler_directives={
+        'embedsignature': True,
+        'language_level': '3',
+    },
     create_extension=create_extension,
 )
 
