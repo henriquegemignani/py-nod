@@ -7,6 +7,7 @@ struct BreakOutFromNative {};
 class LogvisorToExceptionConverter : public logvisor::ILogger {
 public:
 
+
     void report(const char* modName, logvisor::Level severity, fmt::string_view format, fmt::format_args args) override
     {
         auto error_message = fmt::vformat(format, args);
@@ -15,9 +16,11 @@ public:
 
     void report(const char* modName, logvisor::Level severity, fmt::wstring_view format, fmt::wformat_args args) override
     {
+#ifdef UNICODE
         auto buffer = fmt::vformat(format, args);
 		nod::SystemUTF8Conv conv(buffer.c_str());
 		PyErr_SetString(PyExc_RuntimeError, conv.c_str());
+#endif
     }
 
     void reportSource(const char* modName, logvisor::Level severity,
