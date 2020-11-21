@@ -1,3 +1,4 @@
-include _nod.pyx
+include *.pyx
+include *.pxd
 recursive-include py-nod *
 recursive-include external *

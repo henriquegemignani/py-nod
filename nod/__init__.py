@@ -1,3 +1,4 @@
 from _nod import *
+from . import version
 
-VERSION = "1.2.1"
+VERSION = version.version
