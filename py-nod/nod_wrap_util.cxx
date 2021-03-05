@@ -6,7 +6,7 @@ struct BreakOutFromNative {};
 
 class LogvisorToExceptionConverter : public logvisor::ILogger {
 public:
-
+	LogvisorToExceptionConverter() : ILogger(log_typeid(LogvisorToExceptionConverter)) {}
 
     void report(const char* modName, logvisor::Level severity, fmt::string_view format, fmt::format_args args) override
     {
