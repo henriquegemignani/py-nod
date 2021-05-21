@@ -10,7 +10,7 @@ from libcpp.memory cimport unique_ptr
 
 from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
     createProgressCallbackFunction, getDol as _getDol, DiscBase as c_DiscBase, \
-    string_view, \
+    string_view, Header as c_Header, \
     OpenDiscFromImage, SystemStringView, SystemUTF8Conv, SystemString, SystemStringConv, \
     DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
     EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string, \
@@ -37,6 +37,31 @@ def _log_exception_handler():
     registerLogvisorToExceptionConverter()
     yield
     removeLogvisorToExceptionConverter()
+
+
+cdef class Header:
+    @staticmethod
+    cdef create(const c_Header& h):
+        self = Header()
+        self.game_id = PyBytes_FromStringAndSize(h.m_gameID, 6)
+        self.disc_num = h.m_discNum
+        self.disc_version = h.m_discVersion
+        self.audio_streaming = h.m_audioStreaming
+        self.stream_buf_sz = h.m_streamBufSz
+        self.wii_magic = h.m_wiiMagic
+        self.gcn_magic = h.m_gcnMagic
+        self.game_title = PyBytes_FromStringAndSize(h.m_gameTitle, 64)
+        self.disable_hash_verification = h.m_disableHashVerification
+        self.disable_disc_enc = h.m_disableDiscEnc
+        self.debug_mon_off = h.m_debugMonOff
+        self.debug_load_addr = h.m_debugLoadAddr
+        self.dol_off = h.m_dolOff
+        self.fst_off = h.m_fstOff
+        self.fst_sz = h.m_fstSz
+        self.fst_max_sz = h.m_fstMaxSz
+        self.fst_memory_address = h.m_fstMemoryAddress
+        self.user_position = h.m_userPosition
+        self.user_sz = h.m_userSz
 
 
 cdef class ExtractionContext:
@@ -69,6 +94,8 @@ cdef class Partition:
     def get_dol(self) -> bytes:
         return _getDol(self.c_partition)
 
+    def get_header(self):
+        return Header.create(self.c_partition.getHeader())
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():

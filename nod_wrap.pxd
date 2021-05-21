@@ -1,7 +1,7 @@
 from typing import Tuple, Optional
 
 from libc.stddef cimport wchar_t
-from libc.stdint cimport uint32_t, uint64_t
+from libc.stdint cimport uint8_t, uint32_t, uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
@@ -57,7 +57,29 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
     ctypedef function[void(float, SystemStringView, size_t)] FProgress
 
     cppclass Header:
+        char m_gameID[6]
+        char m_discNum
+        char m_discVersion
+        char m_audioStreaming
+        char m_streamBufSz
+        char m_unk1[14]
+        uint32_t m_wiiMagic
+        uint32_t m_gcnMagic
+        char m_gameTitle[64]
+        char m_disableHashVerification
+        char m_disableDiscEnc
+        char m_unk2[0x39e]
+        uint32_t m_debugMonOff
+        uint32_t m_debugLoadAddr
+        char m_unk3[0x18]
         uint32_t m_dolOff
+        uint32_t m_fstOff
+        uint32_t m_fstSz
+        uint32_t m_fstMaxSz
+        uint32_t m_fstMemoryAddress
+        uint32_t m_userPosition
+        uint32_t m_userSz
+        uint8_t padding1[4]
 
     cppclass IPartition:
         c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) except * const
