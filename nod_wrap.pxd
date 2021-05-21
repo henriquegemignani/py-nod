@@ -1,7 +1,7 @@
 from typing import Tuple, Optional
 
 from libc.stddef cimport wchar_t
-from libc.stdint cimport uint64_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
@@ -56,8 +56,13 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 
     ctypedef function[void(float, SystemStringView, size_t)] FProgress
 
+    cppclass Header:
+        uint32_t m_dolOff
+
     cppclass IPartition:
         c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) except * const
+        uint64_t getDOLSize() const
+        const Header& getHeader() const
 
     cdef cppclass DiscBase:
         IPartition* getDataPartition()
@@ -86,6 +91,7 @@ cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
     function[void(float, SystemStringView, size_t)] createFProgressFunction(object, void (*)(object, float, const string&, size_t) except *)
     SystemString string_to_system_string(const string&)
 
+    object getDol(const IPartition*)
     void registerLogvisorToExceptionConverter()
     void removeLogvisorToExceptionConverter()
     object _handleNativeException(object)

@@ -133,6 +133,11 @@ nod::SystemString string_to_system_string(const std::string& s) {
 	return nod::SystemString(conv.sys_str());
 }
 
+PyObject * getDol(const nod::IPartition* partition) {
+	auto buffer = partition->getDOLBuf();
+	return PyBytes_FromStringAndSize(reinterpret_cast<char*>(buffer.get()), partition->getDOLSize());
+}
+
 void registerLogvisorToExceptionConverter() {
 	if (currentConverter) return;
 	auto lock = logvisor::LockLog();

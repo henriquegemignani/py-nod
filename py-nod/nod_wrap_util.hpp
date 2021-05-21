@@ -10,6 +10,7 @@ std::function<void(std::string_view, float)> createProgressCallbackFunction(PyOb
 nod::FProgress createFProgressFunction(PyObject *, void (*)(PyObject *, float, const std::string&, size_t));
 nod::SystemString string_to_system_string(const std::string&);
 
+PyObject * getDol(const nod::IPartition*);
 void registerLogvisorToExceptionConverter();
 void removeLogvisorToExceptionConverter();
 PyObject * _handleNativeException(PyObject *);
