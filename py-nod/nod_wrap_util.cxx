@@ -1,8 +1,6 @@
 #include "nod_wrap_util.hpp"
 #include "logvisor/logvisor.hpp"
 
-#include <ranges>
-
 namespace nod_wrap {
 
 struct BreakOutFromNative {};
@@ -123,7 +121,7 @@ void removeLogvisorToExceptionConverter() {
 	if (!currentConverter) return;
 
 	auto lock = logvisor::LockLog();
-	auto pos = std::ranges::find_if(logvisor::MainLoggers, [](auto& it) { return it.get() == currentConverter; });
+	auto pos = std::find_if(logvisor::MainLoggers.begin(), logvisor::MainLoggers.end(), [](auto& it) { return it.get() == currentConverter; });
 	if (pos != logvisor::MainLoggers.end()) {
 		logvisor::MainLoggers.erase(pos);
 		currentConverter = nullptr;
