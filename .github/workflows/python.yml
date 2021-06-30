@@ -107,7 +107,7 @@ jobs:
           path: dist/
 
       - name: Publish 📦 to TestPyPI
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.testpypi_password }}
