@@ -109,7 +109,7 @@ if is_windows:
     extra_compile_args.append("/std:c++latest")
     extra_compile_args.append("/MD")
 else:
-    extra_compile_args.append("-std=c++20")
+    extra_compile_args.append("-std=c++2a")
 
 ext_modules = [
     CMakeExtension(
