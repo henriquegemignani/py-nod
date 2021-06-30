@@ -106,10 +106,10 @@ extra_compile_args = []
 
 if is_windows:
     extra_compile_args.append("-DUNICODE")
-    extra_compile_args.append("/std:c++17")
+    extra_compile_args.append("/std:c++latest")
     extra_compile_args.append("/MD")
 else:
-    extra_compile_args.append("-std=c++17")
+    extra_compile_args.append("-std=c++20")
 
 ext_modules = [
     CMakeExtension(

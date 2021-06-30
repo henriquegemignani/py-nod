@@ -8,17 +8,28 @@ from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
 
-from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
-    createProgressCallbackFunction, getDol as _getDol, DiscBase as c_DiscBase, \
-    string_view, Header as c_Header, \
-    OpenDiscFromImage, SystemStringView, SystemUTF8Conv, SystemString, SystemStringConv, \
-    DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
-    EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string, \
-    registerLogvisorToExceptionConverter, removeLogvisorToExceptionConverter, _handleNativeException, checkException
+from nod_wrap cimport (
+    ExtractionContext as c_ExtractionContext,
+    createProgressCallbackFunction,
+    getDol as _getDol,
+    DiscBase as c_DiscBase,
+    Header as c_Header,
+    OpenDiscFromImage,
+    DiscBuilderGCN as c_DiscBuilderGCN,
+    createFProgressFunction,
+    EBuildResult,
+    EBuildResult_Success,
+    EBuildResult_Failed,
+    EBuildResult_DiskFull,
+    registerLogvisorToExceptionConverter,
+    removeLogvisorToExceptionConverter,
+    _handleNativeException,
+    checkException,
+)
 
 
-cdef SystemString _str_to_system_string(str path):
-    return string_to_system_string(path.encode("utf-8"))
+cdef string _str_to_string(str path):
+    return path.encode("utf-8")
 
 
 ProgressCallback = Callable[[float, str, int], None]
@@ -99,10 +110,9 @@ cdef class Partition:
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():
-            cdef SystemString system_string = _str_to_system_string(path)
             with _log_exception_handler():
                 extraction_successful = self.c_partition.extractToDirectory(
-                    SystemStringView(system_string.c_str()),
+                    _str_to_string(path),
                     context.c_context
                 )
             if not extraction_successful:
@@ -128,8 +138,7 @@ cdef class DiscBuilderGCN:
         pass
 
     def __cinit__(self, out_path: str, progress_callback: ProgressCallback):
-        cdef SystemString system_string = _str_to_system_string(out_path)
-        self.c_builder = new c_DiscBuilderGCN(SystemStringView(system_string.c_str()),
+        self.c_builder = new c_DiscBuilderGCN(_str_to_string(out_path),
                                               createFProgressFunction(progress_callback, invoke_fprogress_function))
 
     def __dealloc__(self):
@@ -137,15 +146,13 @@ cdef class DiscBuilderGCN:
 
     def build_from_directory(self, directory_in: str) -> None:
         def work():
-            cdef SystemString system_string = _str_to_system_string(directory_in)
             with _log_exception_handler():
-                self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str()))
+                self.c_builder.buildFromDirectory(_str_to_string(directory_in))
         return _handleNativeException(work)
 
     @staticmethod
     def calculate_total_size_required(directory_in: str) -> Optional[int]:
-        cdef SystemString system_string = _str_to_system_string(directory_in)
-        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(SystemStringView(system_string.c_str()))
+        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_string(directory_in))
         if size:
             return cython.operator.dereference(size)
 
@@ -157,9 +164,8 @@ def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
         disc = DiscBase()
         cdef c_bool is_wii = True
 
-        cdef SystemString system_string = _str_to_system_string(path)
         with _log_exception_handler():
-            disc.c_disc = OpenDiscFromImage(SystemStringView(system_string.c_str()), is_wii)
+            disc.c_disc = OpenDiscFromImage(_str_to_string(path), is_wii)
             checkException()
             return disc, is_wii
 
