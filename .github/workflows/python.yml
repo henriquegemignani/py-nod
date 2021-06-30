@@ -92,37 +92,6 @@ jobs:
         with:
           name: python-package-distributions
           path: dist
-    strategy:
-      fail-fast: false
-      matrix:
-        python:
-          - 'cp36-cp36m'
-          - 'cp37-cp37m'
-          - 'cp38-cp38'
-          - 'cp39-cp39'
-
-    runs-on: ubuntu-latest
-
-    name: Linux - Python ${{ matrix.python }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.4.3.4
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-
-      - name: build wheel
-        run: |
-          docker pull quay.io/pypa/manylinux2010_x86_64
-          docker run --rm -e PYTHON_VERSION=${{ matrix.python }} -v $(pwd):/host -w /host quay.io/pypa/manylinux2010_x86_64 ./ci-scripts/build.sh
-      
-      - name: Store the packages
-        uses: actions/upload-artifact@v2
-        with:
-          name: python-package-distributions
-          path: dist
-
 
   test:
     needs:
