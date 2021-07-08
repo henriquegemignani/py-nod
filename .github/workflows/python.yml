@@ -106,7 +106,7 @@ jobs:
         os:
           - {name: 'macOS', image: 'macos-latest', wheel: 'macosx_*'}
           - {name: 'Windows', image: 'windows-latest', wheel: 'win_amd64'}
-          - {name: 'Linux', image: 'ubuntu-latest', wheel: 'manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64'}
+          - {name: 'Linux', image: 'ubuntu-latest', wheel: 'manylinux_2_17_x86_64.manylinux2014_x86_64'}
         python:
           - {version: '3.6', wheel: 'cp36-cp36m'}
           - {version: '3.7', wheel: 'cp37-cp37m'}
