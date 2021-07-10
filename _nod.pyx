@@ -3,20 +3,26 @@ from typing import Tuple, Optional, Callable
 from contextlib import contextmanager
 
 import cython
-from cpython.bytes cimport PyBytes_FromStringAndSize
+from cython.operator cimport dereference, preincrement
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
+from libcpp.utility cimport move
 
 from nod_wrap cimport (
+    optional as c_optional,
+
     ExtractionContext as c_ExtractionContext,
     createProgressCallbackFunction,
     getDol as _getDol,
     DiscBase as c_DiscBase,
     Header as c_Header,
+    IPartReadStream as c_IPartReadStream,
     OpenDiscFromImage,
     DiscBuilderGCN as c_DiscBuilderGCN,
     createFProgressFunction,
+    Node,
     EBuildResult,
     EBuildResult_Success,
     EBuildResult_Failed,
@@ -93,12 +99,41 @@ cdef class ExtractionContext:
         self.c_context.progressCB = createProgressCallbackFunction(callback, invoke_callback_function)
 
 
-cdef class Partition:
-    cdef c_DiscBase.IPartition* c_partition
+cdef class PartReadStream:
+    cdef unique_ptr[c_IPartReadStream] c_stream
+    cdef int offset
 
     @staticmethod
-    cdef create(c_DiscBase.IPartition* c_partition):
-        partition = Partition()
+    cdef create(unique_ptr[c_IPartReadStream] c_stream):
+        stream = PartReadStream()
+        stream.c_stream = move(c_stream)
+        stream.offset = stream.c_stream.get().position()
+        return stream
+
+    def read(self, length):
+        buf = PyBytes_FromStringAndSize(NULL, length)
+        self.c_stream.get().read(PyBytes_AsString(buf), length)
+        return buf
+
+    def seek(self, offset, whence):
+        if whence == 0:
+            offset += self.offset
+        self.c_stream.get().seek(offset, whence)
+    
+    def tell(self):
+        return self.c_stream.get().position() - self.offset
+
+
+cdef class Partition:
+    cdef c_DiscBase.IPartition* c_partition
+    cdef object discParent
+
+    def __init__(self, parent):
+        self.discParent = parent
+
+    @staticmethod
+    cdef create(c_DiscBase.IPartition* c_partition, object parent):
+        partition = Partition(parent)
         partition.c_partition = c_partition
         return partition
 
@@ -119,6 +154,12 @@ cdef class Partition:
                 raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
 
+    def read_file(self, path: str, offset: int = 0):
+        cdef Node* node = &self.c_partition.getFSTRoot()
+        cdef c_optional[Node.DirectoryIterator] f = node.find(_str_to_string(path))
+        if f.value() != node.end():
+            return PartReadStream.create(dereference(dereference(f)).beginReadStream(offset))
+
 
 cdef class DiscBase:
     cdef unique_ptr[c_DiscBase] c_disc
@@ -126,7 +167,7 @@ cdef class DiscBase:
     def get_data_partition(self) -> Optional[Partition]:
         cdef c_DiscBase.IPartition*partition = self.c_disc.get().getDataPartition()
         if partition:
-            return Partition.create(partition)
+            return Partition.create(partition, self)
         else:
             return None
 

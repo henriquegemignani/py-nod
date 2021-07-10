@@ -108,6 +108,7 @@ if is_windows:
     extra_compile_args.append("-DUNICODE")
     extra_compile_args.append("/std:c++latest")
     extra_compile_args.append("/MD")
+    extra_compile_args.append("/Zc:__cplusplus")
 else:
     extra_compile_args.append("-std=c++2a")
 

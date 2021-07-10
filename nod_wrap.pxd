@@ -1,7 +1,7 @@
 from typing import Tuple, Optional
 
 from libc.stddef cimport wchar_t
-from libc.stdint cimport uint8_t, uint32_t, uint64_t
+from libc.stdint cimport uint8_t, uint32_t, int64_t, uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
@@ -11,11 +11,25 @@ from libcpp.functional cimport function
 cdef extern from "string" namespace "std":
     cdef cppclass string_view:
         string_view()
+        const char* data()
+        size_t size() const 
         # wrap-ignore
 
     cdef cppclass optional[T]:
         c_bool operator bool()
         T& operator*()
+        void operator=(T)
+        T& value()
+
+
+cdef extern from "nod/IDiscIO.hpp" namespace "nod":
+    cppclass IReadStream:
+        uint64_t read(void* buf, uint64_t length)
+        void seek(int64_t offset, int whence)
+        uint64_t position() const
+
+    cppclass IPartReadStream(IReadStream):
+        pass
 
 
 cdef extern from "nod/DiscBase.hpp" namespace "nod":
@@ -27,6 +41,19 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
     cdef EBuildResult EBuildResult_DiskFull "nod::EBuildResult::DiskFull"
 
     ctypedef function[void(float, string_view, size_t)] FProgress
+    
+    cppclass Node:
+        cppclass DirectoryIterator:
+            Node& operator*()
+            c_bool operator==(const DirectoryIterator& other) const
+            c_bool operator!=(const DirectoryIterator& other) const
+            DirectoryIterator& operator++()
+
+        unique_ptr[IPartReadStream] beginReadStream(uint64_t offset) const
+        string_view getName() const
+        DirectoryIterator find(string name) const
+        DirectoryIterator begin()
+        DirectoryIterator end()
 
     cppclass Header:
         char m_gameID[6]
@@ -57,6 +84,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
         c_bool extractToDirectory(string path, const ExtractionContext& ctx) except * const
         uint64_t getDOLSize() const
         const Header& getHeader() const
+        const Node& getFSTRoot() const
 
     cdef cppclass DiscBase:
         IPartition* getDataPartition()
@@ -85,6 +113,7 @@ cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
     function[void(float, string_view, size_t)] createFProgressFunction(object, void (*)(object, float, const string&, size_t) except *)
 
     object getDol(const IPartition*)
+    void doPrint(const IPartition*)
     void registerLogvisorToExceptionConverter()
     void removeLogvisorToExceptionConverter()
     object _handleNativeException(object)
