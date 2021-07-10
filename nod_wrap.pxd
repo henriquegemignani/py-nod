@@ -1,7 +1,7 @@
 from typing import Tuple, Optional
 
 from libc.stddef cimport wchar_t
-from libc.stdint cimport uint8_t, uint32_t, uint64_t
+from libc.stdint cimport uint8_t, uint32_t, int64_t, uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
@@ -11,39 +11,25 @@ from libcpp.functional cimport function
 cdef extern from "string" namespace "std":
     cdef cppclass string_view:
         string_view()
-        string_view(char*)
-        # wrap-ignore
-
-    cdef cppclass wstring:
-        # wrap-ignore
-        wstring()
-        wstring(wchar_t*)
-        wstring(wstring_view)
-        wchar_t* c_str()
-
-    cdef cppclass wstring_view:
-        wstring_view()
-        wstring_view(wchar_t*)
+        const char* data()
+        size_t size() const 
         # wrap-ignore
 
     cdef cppclass optional[T]:
         c_bool operator bool()
         T& operator*()
+        void operator=(T)
+        T& value()
 
 
-cdef extern from "nod/Util.hpp" namespace "nod":
-    ctypedef wchar_t SystemChar
-    ctypedef wstring SystemString
-    ctypedef wstring_view SystemStringView
+cdef extern from "nod/IDiscIO.hpp" namespace "nod":
+    cppclass IReadStream:
+        uint64_t read(void* buf, uint64_t length)
+        void seek(int64_t offset, int whence)
+        uint64_t position() const
 
-    cdef cppclass SystemUTF8Conv:
-        SystemUTF8Conv(SystemStringView)
-        char* utf8_str()
-        # lying to Cython here, since otherwise it believes we can't create a std::string from a string_view
-
-    cdef cppclass SystemStringConv:
-        SystemStringConv(string_view)
-        SystemStringView sys_str()
+    cppclass IPartReadStream(IReadStream):
+        pass
 
 
 cdef extern from "nod/DiscBase.hpp" namespace "nod":
@@ -54,7 +40,20 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
     cdef EBuildResult EBuildResult_Failed "nod::EBuildResult::Failed"
     cdef EBuildResult EBuildResult_DiskFull "nod::EBuildResult::DiskFull"
 
-    ctypedef function[void(float, SystemStringView, size_t)] FProgress
+    ctypedef function[void(float, string_view, size_t)] FProgress
+    
+    cppclass Node:
+        cppclass DirectoryIterator:
+            Node& operator*()
+            c_bool operator==(const DirectoryIterator& other) const
+            c_bool operator!=(const DirectoryIterator& other) const
+            DirectoryIterator& operator++()
+
+        unique_ptr[IPartReadStream] beginReadStream(uint64_t offset) const
+        string_view getName() const
+        DirectoryIterator find(string name) const
+        DirectoryIterator begin()
+        DirectoryIterator end()
 
     cppclass Header:
         char m_gameID[6]
@@ -82,9 +81,10 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
         uint8_t padding1[4]
 
     cppclass IPartition:
-        c_bool extractToDirectory(SystemStringView path, const ExtractionContext& ctx) except * const
+        c_bool extractToDirectory(string path, const ExtractionContext& ctx) except * const
         uint64_t getDOLSize() const
         const Header& getHeader() const
+        const Node& getFSTRoot() const
 
     cdef cppclass DiscBase:
         IPartition* getDataPartition()
@@ -93,11 +93,11 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 
 cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
     cdef cppclass DiscBuilderGCN:
-        DiscBuilderGCN(SystemStringView outPath, FProgress progressCB)
-        EBuildResult buildFromDirectory(SystemStringView dirIn) except *
+        DiscBuilderGCN(string outPath, FProgress progressCB)
+        EBuildResult buildFromDirectory(string dirIn) except *
 
         @staticmethod
-        optional[uint64_t] CalculateTotalSizeRequired(SystemStringView dirIn)
+        optional[uint64_t] CalculateTotalSizeRequired(string dirIn)
 
 
 cdef extern from "nod/nod.hpp" namespace "nod":
@@ -105,15 +105,15 @@ cdef extern from "nod/nod.hpp" namespace "nod":
         c_bool force
         function[void(string_view, float)] progressCB
 
-    unique_ptr[DiscBase] OpenDiscFromImage(SystemStringView path, c_bool& isWii)
+    unique_ptr[DiscBase] OpenDiscFromImage(string path, c_bool& isWii)
 
 
 cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
     function[void(string_view, float)] createProgressCallbackFunction(object, void (*)(object, const string&, float) except *)
-    function[void(float, SystemStringView, size_t)] createFProgressFunction(object, void (*)(object, float, const string&, size_t) except *)
-    SystemString string_to_system_string(const string&)
+    function[void(float, string_view, size_t)] createFProgressFunction(object, void (*)(object, float, const string&, size_t) except *)
 
     object getDol(const IPartition*)
+    void doPrint(const IPartition*)
     void registerLogvisorToExceptionConverter()
     void removeLogvisorToExceptionConverter()
     object _handleNativeException(object)

@@ -3,22 +3,39 @@ from typing import Tuple, Optional, Callable
 from contextlib import contextmanager
 
 import cython
-from cpython.bytes cimport PyBytes_FromStringAndSize
+from cython.operator cimport dereference, preincrement
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
+from libcpp.utility cimport move
 
-from nod_wrap cimport ExtractionContext as c_ExtractionContext, \
-    createProgressCallbackFunction, getDol as _getDol, DiscBase as c_DiscBase, \
-    string_view, Header as c_Header, \
-    OpenDiscFromImage, SystemStringView, SystemUTF8Conv, SystemString, SystemStringConv, \
-    DiscBuilderGCN as c_DiscBuilderGCN, createFProgressFunction, EBuildResult,\
-    EBuildResult_Success, EBuildResult_Failed, EBuildResult_DiskFull, string_to_system_string, \
-    registerLogvisorToExceptionConverter, removeLogvisorToExceptionConverter, _handleNativeException, checkException
+from nod_wrap cimport (
+    optional as c_optional,
+
+    ExtractionContext as c_ExtractionContext,
+    createProgressCallbackFunction,
+    getDol as _getDol,
+    DiscBase as c_DiscBase,
+    Header as c_Header,
+    IPartReadStream as c_IPartReadStream,
+    OpenDiscFromImage,
+    DiscBuilderGCN as c_DiscBuilderGCN,
+    createFProgressFunction,
+    Node,
+    EBuildResult,
+    EBuildResult_Success,
+    EBuildResult_Failed,
+    EBuildResult_DiskFull,
+    registerLogvisorToExceptionConverter,
+    removeLogvisorToExceptionConverter,
+    _handleNativeException,
+    checkException,
+)
 
 
-cdef SystemString _str_to_system_string(str path):
-    return string_to_system_string(path.encode("utf-8"))
+cdef string _str_to_string(str path):
+    return path.encode("utf-8")
 
 
 ProgressCallback = Callable[[float, str, int], None]
@@ -82,12 +99,41 @@ cdef class ExtractionContext:
         self.c_context.progressCB = createProgressCallbackFunction(callback, invoke_callback_function)
 
 
-cdef class Partition:
-    cdef c_DiscBase.IPartition* c_partition
+cdef class PartReadStream:
+    cdef unique_ptr[c_IPartReadStream] c_stream
+    cdef int offset
 
     @staticmethod
-    cdef create(c_DiscBase.IPartition* c_partition):
-        partition = Partition()
+    cdef create(unique_ptr[c_IPartReadStream] c_stream):
+        stream = PartReadStream()
+        stream.c_stream = move(c_stream)
+        stream.offset = stream.c_stream.get().position()
+        return stream
+
+    def read(self, length):
+        buf = PyBytes_FromStringAndSize(NULL, length)
+        self.c_stream.get().read(PyBytes_AsString(buf), length)
+        return buf
+
+    def seek(self, offset, whence):
+        if whence == 0:
+            offset += self.offset
+        self.c_stream.get().seek(offset, whence)
+    
+    def tell(self):
+        return self.c_stream.get().position() - self.offset
+
+
+cdef class Partition:
+    cdef c_DiscBase.IPartition* c_partition
+    cdef object discParent
+
+    def __init__(self, parent):
+        self.discParent = parent
+
+    @staticmethod
+    cdef create(c_DiscBase.IPartition* c_partition, object parent):
+        partition = Partition(parent)
         partition.c_partition = c_partition
         return partition
 
@@ -99,15 +145,20 @@ cdef class Partition:
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():
-            cdef SystemString system_string = _str_to_system_string(path)
             with _log_exception_handler():
                 extraction_successful = self.c_partition.extractToDirectory(
-                    SystemStringView(system_string.c_str()),
+                    _str_to_string(path),
                     context.c_context
                 )
             if not extraction_successful:
                 raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
+
+    def read_file(self, path: str, offset: int = 0):
+        cdef Node* node = &self.c_partition.getFSTRoot()
+        cdef c_optional[Node.DirectoryIterator] f = node.find(_str_to_string(path))
+        if f.value() != node.end():
+            return PartReadStream.create(dereference(dereference(f)).beginReadStream(offset))
 
 
 cdef class DiscBase:
@@ -116,7 +167,7 @@ cdef class DiscBase:
     def get_data_partition(self) -> Optional[Partition]:
         cdef c_DiscBase.IPartition*partition = self.c_disc.get().getDataPartition()
         if partition:
-            return Partition.create(partition)
+            return Partition.create(partition, self)
         else:
             return None
 
@@ -128,8 +179,7 @@ cdef class DiscBuilderGCN:
         pass
 
     def __cinit__(self, out_path: str, progress_callback: ProgressCallback):
-        cdef SystemString system_string = _str_to_system_string(out_path)
-        self.c_builder = new c_DiscBuilderGCN(SystemStringView(system_string.c_str()),
+        self.c_builder = new c_DiscBuilderGCN(_str_to_string(out_path),
                                               createFProgressFunction(progress_callback, invoke_fprogress_function))
 
     def __dealloc__(self):
@@ -137,15 +187,13 @@ cdef class DiscBuilderGCN:
 
     def build_from_directory(self, directory_in: str) -> None:
         def work():
-            cdef SystemString system_string = _str_to_system_string(directory_in)
             with _log_exception_handler():
-                self.c_builder.buildFromDirectory(SystemStringView(system_string.c_str()))
+                self.c_builder.buildFromDirectory(_str_to_string(directory_in))
         return _handleNativeException(work)
 
     @staticmethod
     def calculate_total_size_required(directory_in: str) -> Optional[int]:
-        cdef SystemString system_string = _str_to_system_string(directory_in)
-        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(SystemStringView(system_string.c_str()))
+        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_string(directory_in))
         if size:
             return cython.operator.dereference(size)
 
@@ -157,9 +205,8 @@ def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
         disc = DiscBase()
         cdef c_bool is_wii = True
 
-        cdef SystemString system_string = _str_to_system_string(path)
         with _log_exception_handler():
-            disc.c_disc = OpenDiscFromImage(SystemStringView(system_string.c_str()), is_wii)
+            disc.c_disc = OpenDiscFromImage(_str_to_string(path), is_wii)
             checkException()
             return disc, is_wii
 
