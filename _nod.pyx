@@ -12,12 +12,14 @@ from libcpp.utility cimport move
 
 from nod_wrap cimport (
     optional as c_optional,
+    string_view as c_string_view,
 
     ExtractionContext as c_ExtractionContext,
     createProgressCallbackFunction,
     getDol as _getDol,
     DiscBase as c_DiscBase,
     Header as c_Header,
+    Kind_File,
     IPartReadStream as c_IPartReadStream,
     OpenDiscFromImage,
     DiscBuilderGCN as c_DiscBuilderGCN,
@@ -36,6 +38,10 @@ from nod_wrap cimport (
 
 cdef string _str_to_string(str path):
     return path.encode("utf-8")
+
+
+cdef str _view_to_str(c_string_view str_view):
+    return PyBytes_FromStringAndSize(str_view.data(), str_view.size()).decode("utf-8")
 
 
 ProgressCallback = Callable[[float, str, int], None]
@@ -124,6 +130,22 @@ cdef class PartReadStream:
         return self.c_stream.get().position() - self.offset
 
 
+cdef _files_for(Node& node, prefix: str, result: list):
+    cdef c_optional[Node.DirectoryIterator] f
+
+    name = _view_to_str(node.getName())
+    if node.getKind() == Kind_File:
+        result.append(prefix + name)
+    else:
+        newPrefix = prefix
+        if name:
+            newPrefix = prefix + name + "/"
+        f = node.begin()
+        while f.value() != node.end():
+            _files_for(dereference(dereference(f)), newPrefix, result)
+            preincrement(dereference(f))
+
+
 cdef class Partition:
     cdef c_DiscBase.IPartition* c_partition
     cdef object discParent
@@ -154,11 +176,25 @@ cdef class Partition:
                 raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
 
+    def files(self):
+        cdef Node* node = &self.c_partition.getFSTRoot()
+        result = []
+        _files_for(dereference(node), "", result)
+        return result
+
+
     def read_file(self, path: str, offset: int = 0):
         cdef Node* node = &self.c_partition.getFSTRoot()
-        cdef c_optional[Node.DirectoryIterator] f = node.find(_str_to_string(path))
-        if f.value() != node.end():
-            return PartReadStream.create(dereference(dereference(f)).beginReadStream(offset))
+        cdef c_optional[Node.DirectoryIterator] f
+
+        for part in path.split("/"):
+            f = node.find(_str_to_string(part))
+            if f.value() != node.end():
+                node = &dereference(dereference(f))
+            else:
+                raise Exception(f"File {part} not found in '{_view_to_str(node.getName())}'")
+            
+        return PartReadStream.create(dereference(dereference(f)).beginReadStream(offset))
 
 
 cdef class DiscBase:

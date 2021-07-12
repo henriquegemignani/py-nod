@@ -1,5 +1,6 @@
 from typing import Tuple, Optional
 
+from cpython.bytes cimport PyBytes_FromStringAndSize
 from libc.stddef cimport wchar_t
 from libc.stdint cimport uint8_t, uint32_t, int64_t, uint64_t
 from libcpp cimport bool as c_bool
@@ -39,10 +40,17 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
     cdef EBuildResult EBuildResult_Success "nod::EBuildResult::Success"
     cdef EBuildResult EBuildResult_Failed "nod::EBuildResult::Failed"
     cdef EBuildResult EBuildResult_DiskFull "nod::EBuildResult::DiskFull"
+    
+    cdef cppclass Kind:
+        c_bool operator==(const Kind&)
+        
+    cdef Kind Kind_File "nod::Node::Kind::File"
+    cdef Kind Kind_Directory "nod::Node::Kind::Directory"
 
     ctypedef function[void(float, string_view, size_t)] FProgress
     
     cppclass Node:
+
         cppclass DirectoryIterator:
             Node& operator*()
             c_bool operator==(const DirectoryIterator& other) const
@@ -50,6 +58,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
             DirectoryIterator& operator++()
 
         unique_ptr[IPartReadStream] beginReadStream(uint64_t offset) const
+        Kind getKind() const
         string_view getName() const
         DirectoryIterator find(string name) const
         DirectoryIterator begin()
