@@ -47,3 +47,13 @@ def test_build_and_check(pack_sample_game):
         "d/nested.txt",
     ]
     assert disc.get_data_partition().read_file("d/nested.txt").read(3) == b"abc"
+
+    f = disc.get_data_partition().read_file("b.txt")
+    f.seek(2, 1)
+    assert f.read(1) == b"3"
+    f.seek(1)
+    assert f.read(2) == b"23"
+
+    f.close()
+    with pytest.raises(RuntimeError):
+        f.read(1)

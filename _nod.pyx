@@ -118,17 +118,26 @@ cdef class PartReadStream:
         return stream
 
     def read(self, length):
+        if not self.c_stream:
+            raise RuntimeError("already closed")
         buf = PyBytes_FromStringAndSize(NULL, length)
         self.c_stream.get().read(PyBytes_AsString(buf), length)
         return buf
 
-    def seek(self, offset, whence):
+    def seek(self, offset, whence=0):
+        if not self.c_stream:
+            raise RuntimeError("already closed")
         if whence == 0:
             offset += self.offset
         self.c_stream.get().seek(offset, whence)
     
     def tell(self):
+        if not self.c_stream:
+            raise RuntimeError("already closed")
         return self.c_stream.get().position() - self.offset
+
+    def close(self):
+        self.c_stream.reset()
 
 
 cdef _files_for(Node& node, prefix: str, result: list):
