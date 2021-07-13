@@ -23,8 +23,8 @@ def sha256_checksum(filename, block_size=65536):
 def _pack_sample_game(tmp_path_factory):
     filesystem_root = Path(__file__).parent.joinpath("sample_game")
     image_out = tmp_path_factory.mktemp("iso").joinpath("game.iso")
-    disc_builder = nod.DiscBuilderGCN(os.fspath(image_out), fprogress_callback)
-    disc_builder.build_from_directory(os.fspath(filesystem_root))
+    disc_builder = nod.DiscBuilderGCN(image_out, fprogress_callback)
+    disc_builder.build_from_directory(filesystem_root)
     return image_out
 
 
@@ -35,7 +35,7 @@ def test_packunpack(pack_sample_game):
 
 
 def test_build_and_check(pack_sample_game):
-    result = nod.open_disc_from_image(os.fspath(pack_sample_game))
+    result = nod.open_disc_from_image(pack_sample_game)
     assert result is not None
     assert not result[1]
     disc = result[0]

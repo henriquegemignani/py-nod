@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from typing import Tuple, Optional, Callable
 from contextlib import contextmanager
@@ -211,38 +212,38 @@ cdef class DiscBase:
 cdef class DiscBuilderGCN:
     cdef c_DiscBuilderGCN* c_builder
 
-    def __init__(self, out_path: str, progress_callback: ProgressCallback):
+    def __init__(self, out_path: os.PathLike, progress_callback: ProgressCallback):
         pass
 
-    def __cinit__(self, out_path: str, progress_callback: ProgressCallback):
-        self.c_builder = new c_DiscBuilderGCN(_str_to_string(out_path),
+    def __cinit__(self, out_path: os.PathLike, progress_callback: ProgressCallback):
+        self.c_builder = new c_DiscBuilderGCN(_str_to_string(os.fspath(out_path)),
                                               createFProgressFunction(progress_callback, invoke_fprogress_function))
 
     def __dealloc__(self):
         del self.c_builder
 
-    def build_from_directory(self, directory_in: str) -> None:
+    def build_from_directory(self, directory_in: os.PathLike) -> None:
         def work():
             with _log_exception_handler():
-                self.c_builder.buildFromDirectory(_str_to_string(directory_in))
+                self.c_builder.buildFromDirectory(_str_to_string(os.fspath(directory_in)))
         return _handleNativeException(work)
 
     @staticmethod
-    def calculate_total_size_required(directory_in: str) -> Optional[int]:
-        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_string(directory_in))
+    def calculate_total_size_required(directory_in: os.PathLike) -> Optional[int]:
+        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_string(os.fspath(directory_in)))
         if size:
             return cython.operator.dereference(size)
 
         return None
 
 
-def open_disc_from_image(path: str) -> Optional[Tuple[DiscBase, bool]]:
+def open_disc_from_image(path: os.PathLike) -> Optional[Tuple[DiscBase, bool]]:
     def work():
         disc = DiscBase()
         cdef c_bool is_wii = True
 
         with _log_exception_handler():
-            disc.c_disc = OpenDiscFromImage(_str_to_string(path), is_wii)
+            disc.c_disc = OpenDiscFromImage(_str_to_string(os.fspath(path)), is_wii)
             checkException()
             return disc, is_wii
 
