@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Tuple, Optional, Callable
+from typing import Tuple, Optional, Callable, List
 from contextlib import contextmanager
 
 import cython
@@ -63,10 +63,10 @@ def _log_exception_handler():
     removeLogvisorToExceptionConverter()
 
 
-cdef class Header:
+cdef class DolHeader:
     @staticmethod
     cdef create(const c_Header& h):
-        self = Header()
+        self = DolHeader()
         self.game_id = PyBytes_FromStringAndSize(h.m_gameID, 6)
         self.disc_num = h.m_discNum
         self.disc_version = h.m_discVersion
@@ -173,7 +173,7 @@ cdef class Partition:
         return _getDol(self.c_partition)
 
     def get_header(self):
-        return Header.create(self.c_partition.getHeader())
+        return DolHeader.create(self.c_partition.getHeader())
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():
@@ -186,14 +186,14 @@ cdef class Partition:
                 raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
 
-    def files(self):
+    def files(self) -> List[str]:
         cdef Node* node = &self.c_partition.getFSTRoot()
         result = []
         _files_for(dereference(node), "", result)
         return result
 
 
-    def read_file(self, path: str, offset: int = 0):
+    def read_file(self, path: str, offset: int = 0) -> PartReadStream:
         cdef Node* node = &self.c_partition.getFSTRoot()
         cdef c_optional[Node.DirectoryIterator] f
 
