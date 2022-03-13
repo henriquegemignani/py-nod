@@ -6,6 +6,7 @@ from contextlib import contextmanager
 import cython
 from cython.operator cimport dereference, preincrement
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
+from libc.stdint cimport uint64_t
 from libcpp cimport bool as c_bool
 from libcpp.string cimport string
 from libcpp.memory cimport unique_ptr
@@ -109,17 +110,21 @@ cdef class ExtractionContext:
 cdef class PartReadStream:
     cdef unique_ptr[c_IPartReadStream] c_stream
     cdef int offset
+    cdef uint64_t _size
 
     @staticmethod
-    cdef create(unique_ptr[c_IPartReadStream] c_stream):
+    cdef create(unique_ptr[c_IPartReadStream] c_stream, uint64_t size):
         stream = PartReadStream()
         stream.c_stream = move(c_stream)
         stream.offset = stream.c_stream.get().position()
+        stream._size = size
         return stream
 
-    def read(self, length):
+    def read(self, length=None):
         if not self.c_stream:
             raise RuntimeError("already closed")
+        if length is None:
+            length = self._size - self.tell()
         buf = PyBytes_FromStringAndSize(NULL, length)
         self.c_stream.get().read(PyBytes_AsString(buf), length)
         return buf
@@ -129,6 +134,10 @@ cdef class PartReadStream:
             raise RuntimeError("already closed")
         if whence == 0:
             offset += self.offset
+        elif whence == 2:
+            offset += self._size
+        elif whence != 1:
+            raise ValueError(f"Unknown whence: {whence}")
         self.c_stream.get().seek(offset, whence)
     
     def tell(self):
@@ -138,6 +147,15 @@ cdef class PartReadStream:
 
     def close(self):
         self.c_stream.reset()
+
+    def size(self):
+        return self._size
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
 
 cdef _files_for(Node& node, prefix: str, result: list):
@@ -202,9 +220,12 @@ cdef class Partition:
             if f.value() != node.end():
                 node = &dereference(dereference(f))
             else:
-                raise Exception(f"File {part} not found in '{_view_to_str(node.getName())}'")
+                raise FileNotFoundError(f"File {part} not found in '{_view_to_str(node.getName())}'")
             
-        return PartReadStream.create(dereference(dereference(f)).beginReadStream(offset))
+        return PartReadStream.create(
+            dereference(dereference(f)).beginReadStream(offset),
+            dereference(dereference(f)).size(),
+        )
 
 
 cdef class DiscBase:

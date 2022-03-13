@@ -60,6 +60,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
         unique_ptr[IPartReadStream] beginReadStream(uint64_t offset) const
         Kind getKind() const
         string_view getName() const
+        uint64_t size() const
         DirectoryIterator find(string name) const
         DirectoryIterator begin()
         DirectoryIterator end()
