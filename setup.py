@@ -166,6 +166,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=["nod"],
+    python_requires=">=3.7",
     scripts=[
     ],
     package_data={
