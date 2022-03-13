@@ -154,30 +154,10 @@ cythonized_ext_modules = cythonize(
 for ext_module in cythonized_ext_modules:
     ext_module.include_dirs = custom_include_paths
 
-with open(os.path.join(file_dir, "README.md")) as readme_file:
-    long_description = readme_file.read()
-
 setup(
-    name='nod',
     use_scm_version=True,
-    author='Henrique Gemignani',
-    url='https://github.com/henriquegemignani/py-nod',
-    description='Python bindings for the nod library.',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    packages=["nod"],
-    python_requires=">=3.7",
     scripts=[
     ],
-    package_data={
-    },
-    license='License :: OSI Approved :: MIT License',
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3 :: Only',
-        'License :: OSI Approved :: MIT License',
-    ],
-    install_requires=[],
     cmdclass={
         'build_ext': CMakeBuild,
     },
