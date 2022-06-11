@@ -74,6 +74,9 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
 
+      - name: Avoid issues with Git's solution for CVE-2022-24765 breaking setuptools-scm
+        run: git config --global --add safe.directory $(pwd)
+
       - run: /opt/python/${{ matrix.python }}/bin/python -m venv .venv
      
       - name: Install Python packages
