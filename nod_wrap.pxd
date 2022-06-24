@@ -25,9 +25,9 @@ cdef extern from "string" namespace "std":
 
 cdef extern from "nod/IDiscIO.hpp" namespace "nod":
     cppclass IReadStream:
-        uint64_t read(void* buf, uint64_t length)
-        void seek(int64_t offset, int whence)
-        uint64_t position() const
+        uint64_t read(void* buf, uint64_t length) nogil
+        void seek(int64_t offset, int whence) nogil
+        uint64_t position() nogil const
 
     cppclass IPartReadStream(IReadStream):
         pass

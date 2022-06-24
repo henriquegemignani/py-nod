@@ -123,10 +123,18 @@ cdef class PartReadStream:
     def read(self, length=None):
         if not self.c_stream:
             raise RuntimeError("already closed")
+
+        cdef uint64_t actual_length
         if length is None:
-            length = self._size - self.tell()
-        buf = PyBytes_FromStringAndSize(NULL, length)
-        self.c_stream.get().read(PyBytes_AsString(buf), length)
+            actual_length = self._size - self.tell()
+        else:
+            actual_length = length
+
+        buf = PyBytes_FromStringAndSize(NULL, actual_length)
+        buf_as_str = PyBytes_AsString(buf)
+        with nogil:
+            self.c_stream.get().read(buf_as_str, actual_length)
+        
         return buf
 
     def seek(self, offset, whence=0):
