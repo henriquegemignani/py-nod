@@ -11,8 +11,10 @@ public:
 
     void report(const char* modName, logvisor::Level severity, fmt::string_view format, fmt::format_args args) override
     {
+		auto state = PyGILState_Ensure();
         auto error_message = fmt::vformat(format, args);
 		PyErr_SetString(PyExc_RuntimeError, error_message.c_str());
+		auto has_err = PyErr_Occurred();
     }
 	
     void reportSource(const char* modName, logvisor::Level severity,
@@ -72,10 +74,14 @@ private:
 	PyObject* obj_;
 
 	void increment() const {
+		auto state = PyGILState_Ensure();
 		Py_XINCREF(obj_);
+		PyGILState_Release(state);
 	}
 	void decrement_and_clear() {
+		auto state = PyGILState_Ensure();
 		Py_CLEAR(obj_);
+		PyGILState_Release(state);
 	}
 	void clear() {
 		obj_ = nullptr;
@@ -86,8 +92,11 @@ std::function<void(std::string_view, float)> createProgressCallbackFunction(PyOb
 	PyObjectHolder holder(obj);
     return [=](std::string_view s, float p) {
 		if (holder.obj() != Py_None) {
+			auto state = PyGILState_Ensure();
         	callback(holder.obj(), std::string(s), p);
-			if (PyErr_Occurred()) {
+			auto has_err = PyErr_Occurred();
+			PyGILState_Release(state);
+			if (has_err) {
 				throw BreakOutFromNative();
 			}
 		}
@@ -98,8 +107,11 @@ nod::FProgress createFProgressFunction(PyObject * obj, void (*callback)(PyObject
 	PyObjectHolder holder(obj);
     return [=](float totalProg, std::string_view fileName, size_t fileBytesXfered) {
 		if (holder.obj() != Py_None) {
+			auto state = PyGILState_Ensure();
         	callback(holder.obj(), totalProg, std::string(fileName), fileBytesXfered);
-			if (PyErr_Occurred()) {
+			auto has_err = PyErr_Occurred();
+			PyGILState_Release(state);
+			if (has_err) {
 				throw BreakOutFromNative();
 			}
 		}
