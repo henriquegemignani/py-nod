@@ -25,9 +25,9 @@ cdef extern from "string" namespace "std":
 
 cdef extern from "nod/IDiscIO.hpp" namespace "nod":
     cppclass IReadStream:
-        uint64_t read(void* buf, uint64_t length)
-        void seek(int64_t offset, int whence)
-        uint64_t position() const
+        uint64_t read(void* buf, uint64_t length) nogil
+        void seek(int64_t offset, int whence) nogil
+        uint64_t position() nogil const
 
     cppclass IPartReadStream(IReadStream):
         pass
@@ -91,7 +91,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
         uint8_t padding1[4]
 
     cppclass IPartition:
-        c_bool extractToDirectory(string path, const ExtractionContext& ctx) except * const
+        c_bool extractToDirectory(string path, const ExtractionContext& ctx) nogil except * const
         uint64_t getDOLSize() const
         const Header& getHeader() const
         const Node& getFSTRoot() const
@@ -104,10 +104,10 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
     cdef cppclass DiscBuilderGCN:
         DiscBuilderGCN(string outPath, FProgress progressCB)
-        EBuildResult buildFromDirectory(string dirIn) except *
+        EBuildResult buildFromDirectory(string dirIn) nogil except *
 
         @staticmethod
-        optional[uint64_t] CalculateTotalSizeRequired(string dirIn)
+        optional[uint64_t] CalculateTotalSizeRequired(string dirIn) nogil
 
 
 cdef extern from "nod/nod.hpp" namespace "nod":
@@ -115,7 +115,7 @@ cdef extern from "nod/nod.hpp" namespace "nod":
         c_bool force
         function[void(string_view, float)] progressCB
 
-    unique_ptr[DiscBase] OpenDiscFromImage(string path, c_bool& isWii)
+    unique_ptr[DiscBase] OpenDiscFromImage(string path, c_bool& isWii) nogil
 
 
 cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":

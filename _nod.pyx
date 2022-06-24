@@ -123,10 +123,18 @@ cdef class PartReadStream:
     def read(self, length=None):
         if not self.c_stream:
             raise RuntimeError("already closed")
+
+        cdef uint64_t actual_length
         if length is None:
-            length = self._size - self.tell()
-        buf = PyBytes_FromStringAndSize(NULL, length)
-        self.c_stream.get().read(PyBytes_AsString(buf), length)
+            actual_length = self._size - self.tell()
+        else:
+            actual_length = length
+
+        buf = PyBytes_FromStringAndSize(NULL, actual_length)
+        buf_as_str = PyBytes_AsString(buf)
+        with nogil:
+            self.c_stream.get().read(buf_as_str, actual_length)
+        
         return buf
 
     def seek(self, offset, whence=0):
@@ -195,11 +203,15 @@ cdef class Partition:
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():
+            cdef c_bool extraction_successful = False
+            cdef string native_path = _str_to_string(path)
+
             with _log_exception_handler():
-                extraction_successful = self.c_partition.extractToDirectory(
-                    _str_to_string(path),
-                    context.c_context
-                )
+                with nogil:
+                    extraction_successful = self.c_partition.extractToDirectory(
+                        native_path,
+                        context.c_context
+                    )
             if not extraction_successful:
                 raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
@@ -254,26 +266,34 @@ cdef class DiscBuilderGCN:
 
     def build_from_directory(self, directory_in: os.PathLike) -> None:
         def work():
+            cdef string native_path = _str_to_string(os.fspath(directory_in))
             with _log_exception_handler():
-                self.c_builder.buildFromDirectory(_str_to_string(os.fspath(directory_in)))
+                with nogil:
+                    self.c_builder.buildFromDirectory(native_path)
         return _handleNativeException(work)
 
     @staticmethod
     def calculate_total_size_required(directory_in: os.PathLike) -> Optional[int]:
-        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_string(os.fspath(directory_in)))
+        cdef string native_path = _str_to_string(os.fspath(directory_in))
+
+        cdef c_optional[uint64_t] size
+        with nogil:
+            size = c_DiscBuilderGCN.CalculateTotalSizeRequired(native_path)
+        
         if size:
             return cython.operator.dereference(size)
-
         return None
 
 
 def open_disc_from_image(path: os.PathLike) -> Optional[Tuple[DiscBase, bool]]:
     def work():
         disc = DiscBase()
+        cdef string native_path = _str_to_string(os.fspath(path))
         cdef c_bool is_wii = True
 
         with _log_exception_handler():
-            disc.c_disc = OpenDiscFromImage(_str_to_string(os.fspath(path)), is_wii)
+            with nogil:
+                disc.c_disc = OpenDiscFromImage(native_path, is_wii)
             checkException()
             return disc, is_wii
 
