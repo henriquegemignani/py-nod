@@ -278,10 +278,12 @@ cdef class DiscBuilderGCN:
 def open_disc_from_image(path: os.PathLike) -> Optional[Tuple[DiscBase, bool]]:
     def work():
         disc = DiscBase()
+        cdef string native_path = _str_to_string(os.fspath(path))
         cdef c_bool is_wii = True
 
         with _log_exception_handler():
-            disc.c_disc = OpenDiscFromImage(_str_to_string(os.fspath(path)), is_wii)
+            with nogil:
+                disc.c_disc = OpenDiscFromImage(native_path, is_wii)
             checkException()
             return disc, is_wii
 

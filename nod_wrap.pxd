@@ -115,7 +115,7 @@ cdef extern from "nod/nod.hpp" namespace "nod":
         c_bool force
         function[void(string_view, float)] progressCB
 
-    unique_ptr[DiscBase] OpenDiscFromImage(string path, c_bool& isWii)
+    unique_ptr[DiscBase] OpenDiscFromImage(string path, c_bool& isWii) nogil
 
 
 cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
