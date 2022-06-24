@@ -203,11 +203,15 @@ cdef class Partition:
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():
+            cdef c_bool extraction_successful = False
+            cdef string native_path = _str_to_string(path)
+
             with _log_exception_handler():
-                extraction_successful = self.c_partition.extractToDirectory(
-                    _str_to_string(path),
-                    context.c_context
-                )
+                with nogil:
+                    extraction_successful = self.c_partition.extractToDirectory(
+                        native_path,
+                        context.c_context
+                    )
             if not extraction_successful:
                 raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
@@ -262,16 +266,22 @@ cdef class DiscBuilderGCN:
 
     def build_from_directory(self, directory_in: os.PathLike) -> None:
         def work():
+            cdef string native_path = _str_to_string(os.fspath(directory_in))
             with _log_exception_handler():
-                self.c_builder.buildFromDirectory(_str_to_string(os.fspath(directory_in)))
+                with nogil:
+                    self.c_builder.buildFromDirectory(native_path)
         return _handleNativeException(work)
 
     @staticmethod
     def calculate_total_size_required(directory_in: os.PathLike) -> Optional[int]:
-        size = c_DiscBuilderGCN.CalculateTotalSizeRequired(_str_to_string(os.fspath(directory_in)))
+        cdef string native_path = _str_to_string(os.fspath(directory_in))
+
+        cdef c_optional[uint64_t] size
+        with nogil:
+            size = c_DiscBuilderGCN.CalculateTotalSizeRequired(native_path)
+        
         if size:
             return cython.operator.dereference(size)
-
         return None
 
 
