@@ -47,10 +47,10 @@ class CMakeBuild(build_ext):
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
                       '-DCMAKE_POSITION_INDEPENDENT_CODE=YES']
         library_output_dir = extdir
-        
+
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
-        
+
         if is_windows:
             cmake_args += ['-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             if sys.maxsize > 2 ** 32:
@@ -61,13 +61,13 @@ class CMakeBuild(build_ext):
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j2']
             library_name_format = "lib{}.a"
-        
+
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
                                                               self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        
+
         subprocess.run(
             ['cmake', cmake_options["dir"]] + cmake_args,
             cwd=self.build_temp,
@@ -80,7 +80,7 @@ class CMakeBuild(build_ext):
                 cwd=self.build_temp,
                 check=True
             )
-        
+
         for target, target_output in cmake_options["targets"].items():
             subprocess.run(
                 ['cmake', '--build', '.', '--target', target] + build_args,
@@ -155,9 +155,9 @@ for ext_module in cythonized_ext_modules:
     ext_module.include_dirs = custom_include_paths
 
 setup(
-    use_scm_version=True,
-    scripts=[
-    ],
+    use_scm_version={
+        "local_scheme": "no-local-version",
+    },
     cmdclass={
         'build_ext': CMakeBuild,
     },
