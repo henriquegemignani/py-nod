@@ -21,6 +21,7 @@ jobs:
           - '3.8'
           - '3.9'
           - '3.10'
+          - '3.11-dev'
 
     runs-on: ${{ matrix.os }}
     name: Wheel for ${{ matrix.os }} (${{ matrix.python }})
@@ -62,6 +63,7 @@ jobs:
           - 'cp38-cp38'
           - 'cp39-cp39'
           - 'cp310-cp310'
+          - 'cp311-cp311'
 
     runs-on: ubuntu-latest
     container: quay.io/pypa/manylinux2014_x86_64
