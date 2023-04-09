@@ -4,10 +4,24 @@ from _nod import (
     DiscBuilderGCN,
     Partition,
     PartReadStream,
-    DolHeader,
     ExtractionContext,
     ProgressCallback,
 )
+
 from . import version
+from .types import DolHeader
 
 VERSION = version.version
+
+__all__ = [
+    open_disc_from_image,
+    VERSION,
+
+    DiscBase,
+    DiscBuilderGCN,
+    Partition,
+    PartReadStream,
+    ExtractionContext,
+    ProgressCallback,
+    DolHeader,
+]

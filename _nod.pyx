@@ -35,6 +35,8 @@ from nod_wrap cimport (
     checkException,
 )
 
+import nod.types
+
 
 cdef string _str_to_string(str path):
     return path.encode("utf-8")
@@ -55,29 +57,28 @@ cdef void invoke_fprogress_function(object callback, float totalProg, const stri
     callback(totalProg, fileName.decode("utf-8"), fileBytesXfered)
 
 
-cdef class DolHeader:
-    @staticmethod
-    cdef create(const c_Header& h):
-        self = DolHeader()
-        self.game_id = PyBytes_FromStringAndSize(h.m_gameID, 6)
-        self.disc_num = h.m_discNum
-        self.disc_version = h.m_discVersion
-        self.audio_streaming = h.m_audioStreaming
-        self.stream_buf_sz = h.m_streamBufSz
-        self.wii_magic = h.m_wiiMagic
-        self.gcn_magic = h.m_gcnMagic
-        self.game_title = PyBytes_FromStringAndSize(h.m_gameTitle, 64)
-        self.disable_hash_verification = h.m_disableHashVerification
-        self.disable_disc_enc = h.m_disableDiscEnc
-        self.debug_mon_off = h.m_debugMonOff
-        self.debug_load_addr = h.m_debugLoadAddr
-        self.dol_off = h.m_dolOff
-        self.fst_off = h.m_fstOff
-        self.fst_sz = h.m_fstSz
-        self.fst_max_sz = h.m_fstMaxSz
-        self.fst_memory_address = h.m_fstMemoryAddress
-        self.user_position = h.m_userPosition
-        self.user_sz = h.m_userSz
+cdef _create_dol_header(const c_Header& h):
+    return nod.types.DolHeader(
+        game_id = PyBytes_FromStringAndSize(h.m_gameID, 6),
+        disc_num = h.m_discNum,
+        disc_version = h.m_discVersion,
+        audio_streaming = h.m_audioStreaming,
+        stream_buf_sz = h.m_streamBufSz,
+        wii_magic = h.m_wiiMagic,
+        gcn_magic = h.m_gcnMagic,
+        game_title = PyBytes_FromStringAndSize(h.m_gameTitle, 64),
+        disable_hash_verification = h.m_disableHashVerification,
+        disable_disc_enc = h.m_disableDiscEnc,
+        debug_mon_off = h.m_debugMonOff,
+        debug_load_addr = h.m_debugLoadAddr,
+        dol_off = h.m_dolOff,
+        fst_off = h.m_fstOff,
+        fst_sz = h.m_fstSz,
+        fst_max_sz = h.m_fstMaxSz,
+        fst_memory_address = h.m_fstMemoryAddress,
+        user_position = h.m_userPosition,
+        user_sz = h.m_userSz,
+    )
 
 
 cdef class ExtractionContext:
@@ -189,8 +190,8 @@ cdef class Partition:
     def get_dol(self) -> bytes:
         return _getDol(self.c_partition)
 
-    def get_header(self):
-        return DolHeader.create(self.c_partition.getHeader())
+    def get_header(self) -> nod.types.DolHeader:
+        return _create_dol_header(self.c_partition.getHeader())
 
     def extract_to_directory(self, path: str, context: ExtractionContext) -> None:
         def work():

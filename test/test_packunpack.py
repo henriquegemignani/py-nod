@@ -1,5 +1,4 @@
 import hashlib
-import os
 from pathlib import Path
 
 import pytest
@@ -26,7 +25,6 @@ def _pack_sample_game(tmp_path_factory):
     disc_builder = nod.DiscBuilderGCN(image_out, fprogress_callback)
     disc_builder.build_from_directory(filesystem_root)
     return image_out
-
 
 
 def test_packunpack(pack_sample_game):
@@ -57,3 +55,16 @@ def test_build_and_check(pack_sample_game):
     f.close()
     with pytest.raises(RuntimeError):
         f.read(1)
+
+
+def test_get_header(pack_sample_game):
+    result: nod.DiscBase = nod.open_disc_from_image(pack_sample_game)[0]
+    data: nod.Partition = result.get_data_partition()
+
+    header: nod.DolHeader = data.get_header()
+    assert header == nod.DolHeader(
+        game_id=b'G2ME0R', disc_num=0, disc_version=0, audio_streaming=1, stream_buf_sz=0, wii_magic=0,
+        gcn_magic=3258163005,
+        game_title=b'Metroid Prime 2: Randomizer - QFHHNLN3'.ljust(64, b'\x00'),
+        disable_hash_verification=0, disable_disc_enc=0, debug_mon_off=0, debug_load_addr=0, dol_off=1459978240,
+        fst_off=9280, fst_sz=96, fst_max_sz=96, fst_memory_address=255680, user_position=1459978176, user_sz=64)
