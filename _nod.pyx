@@ -169,7 +169,7 @@ cdef _files_for(Node& node, prefix: str, result: list):
         if name:
             newPrefix = prefix + name + "/"
         f = node.begin()
-        while f.value() != node.end():
+        while dereference(f) != node.end():
             _files_for(dereference(dereference(f)), newPrefix, result)
             preincrement(dereference(f))
 
