@@ -220,7 +220,7 @@ cdef class Partition:
 
         for part in path.split("/"):
             f = node.find(_str_to_string(part))
-            if f.value() != node.end():
+            if dereference(f) != node.end():
                 node = &dereference(dereference(f))
             else:
                 raise FileNotFoundError(f"File {part} not found in '{_view_to_str(node.getName())}'")
