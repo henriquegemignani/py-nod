@@ -31,8 +31,6 @@ from nod_wrap cimport (
     EBuildResult_Success,
     EBuildResult_Failed,
     EBuildResult_DiskFull,
-    registerLogvisorToExceptionConverter,
-    removeLogvisorToExceptionConverter,
     _handleNativeException,
     checkException,
 )
