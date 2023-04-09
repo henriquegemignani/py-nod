@@ -124,7 +124,5 @@ cdef extern from "py-nod/nod_wrap_util.hpp" namespace "nod_wrap":
 
     object getDol(const IPartition*)
     void doPrint(const IPartition*)
-    void registerLogvisorToExceptionConverter()
-    void removeLogvisorToExceptionConverter()
     object _handleNativeException(object)
     void checkException() except *

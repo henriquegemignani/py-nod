@@ -12,8 +12,6 @@ std::function<void(std::string_view, float)> createProgressCallbackFunction(PyOb
 nod::FProgress createFProgressFunction(PyObject *, void (*)(PyObject *, float, const std::string&, size_t));
 
 PyObject * getDol(const nod::IPartition*);
-void registerLogvisorToExceptionConverter();
-void removeLogvisorToExceptionConverter();
 PyObject * _handleNativeException(PyObject *);
 inline void checkException() {}
 

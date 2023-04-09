@@ -57,13 +57,6 @@ cdef void invoke_fprogress_function(object callback, float totalProg, const stri
     callback(totalProg, fileName.decode("utf-8"), fileBytesXfered)
 
 
-@contextmanager
-def _log_exception_handler():
-    registerLogvisorToExceptionConverter()
-    yield
-    removeLogvisorToExceptionConverter()
-
-
 cdef class DolHeader:
     @staticmethod
     cdef create(const c_Header& h):
@@ -206,12 +199,11 @@ cdef class Partition:
             cdef c_bool extraction_successful = False
             cdef string native_path = _str_to_string(path)
 
-            with _log_exception_handler():
-                with nogil:
-                    extraction_successful = self.c_partition.extractToDirectory(
-                        native_path,
-                        context.c_context
-                    )
+            with nogil:
+                extraction_successful = self.c_partition.extractToDirectory(
+                    native_path,
+                    context.c_context
+                )
             if not extraction_successful:
                 raise RuntimeError("Unable to extract")
         return _handleNativeException(work)
@@ -267,9 +259,8 @@ cdef class DiscBuilderGCN:
     def build_from_directory(self, directory_in: os.PathLike) -> None:
         def work():
             cdef string native_path = _str_to_string(os.fspath(directory_in))
-            with _log_exception_handler():
-                with nogil:
-                    self.c_builder.buildFromDirectory(native_path)
+            with nogil:
+                self.c_builder.buildFromDirectory(native_path)
         return _handleNativeException(work)
 
     @staticmethod
@@ -285,16 +276,15 @@ cdef class DiscBuilderGCN:
         return None
 
 
-def open_disc_from_image(path: os.PathLike) -> Optional[Tuple[DiscBase, bool]]:
+def open_disc_from_image(path: os.PathLike) -> Tuple[DiscBase, bool]:
     def work():
         disc = DiscBase()
         cdef string native_path = _str_to_string(os.fspath(path))
         cdef c_bool is_wii = True
 
-        with _log_exception_handler():
-            with nogil:
-                disc.c_disc = OpenDiscFromImage(native_path, is_wii)
-            checkException()
-            return disc, is_wii
+        with nogil:
+            disc.c_disc = OpenDiscFromImage(native_path, is_wii)
+        checkException()
+        return disc, is_wii
 
     return _handleNativeException(work)

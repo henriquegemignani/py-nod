@@ -11,10 +11,10 @@ public:
 
     void report(const char* modName, logvisor::Level severity, fmt::string_view format, fmt::format_args args) override
     {
-		auto state = PyGILState_Ensure();
+        auto state = PyGILState_Ensure();
         auto error_message = fmt::vformat(format, args);
 		PyErr_SetString(PyExc_RuntimeError, error_message.c_str());
-		auto has_err = PyErr_Occurred();
+		PyGILState_Release(state);
     }
 	
     void reportSource(const char* modName, logvisor::Level severity,
@@ -143,11 +143,16 @@ void removeLogvisorToExceptionConverter() {
 PyObject * _handleNativeException(PyObject * callable) {
 	if (PyErr_Occurred())
 		return NULL;
+
+	registerLogvisorToExceptionConverter();
+	PyObject * result;
 	try {
-		return PyObject_CallFunction(callable, NULL);
+		result = PyObject_CallFunction(callable, NULL);
 	} catch (BreakOutFromNative) {
-		return NULL;
+	    result = NULL;
 	}
+	removeLogvisorToExceptionConverter();
+	return result;
 }
 
 }
