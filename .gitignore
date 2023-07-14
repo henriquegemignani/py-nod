@@ -106,4 +106,4 @@ ENV/
 /py-nod/logvisor.lib
 /.idea/workspace.xml
 
-nod/version.py
+/src/nod/version.py

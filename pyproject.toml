@@ -5,4 +5,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
-write_to = "nod/version.py"
+write_to = "src/nod/version.py"
