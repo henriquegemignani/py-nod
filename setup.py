@@ -44,7 +44,7 @@ ext_modules = [
 
 cythonized_ext_modules = setuptools_cmake_helper.cythonize_extensions(
     ext_modules,
-    include_path=[os.fspath(p) for p in custom_include_paths],
+    include_paths=[os.fspath(p) for p in custom_include_paths],
     language_level="3",
 )
 

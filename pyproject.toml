@@ -7,6 +7,37 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "nod"
+authors = [{name = "Henrique Gemignani"}]
+description = "Python bindings for the nod library."
+license = {text = "License :: OSI Approved :: MIT License"}
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.8"
+dependencies = []
+dynamic = ["version"]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/henriquegemignani/py-nod"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
 [tool.setuptools_scm]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
