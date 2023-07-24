@@ -1,8 +1,14 @@
 [build-system]
-# setuptools 60.0.0+ breaks no-local-version
-requires = ["setuptools>=44.0.0", "Cython>=0.29.21", "setuptools_scm[toml]>=6.4"]
+requires = [
+    "setuptools>=61.2",
+    "Cython>=0.29.21",
+    "setuptools_scm[toml]>=6.4",
+    "setuptools-cmake-helper>=0.1.1",
+]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 write_to = "src/nod/version.py"
+git_describe_command = "git describe --dirty --tags --long --match v[0-9]*"
