@@ -1,5 +1,5 @@
 # py-nod
-Python 3.6 bindings for the [NOD](https://gitlab.axiodl.com/AxioDL/nod), a library for traversing, dumping, and authoring
+Python 3.8 bindings for the [NOD](https://gitlab.axiodl.com/AxioDL/nod), a library for traversing, dumping, and authoring
 GameCube and Wii optical disc images.
 
 
