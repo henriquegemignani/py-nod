@@ -1,9 +1,8 @@
 import hashlib
 from pathlib import Path
 
-import pytest
-
 import nod
+import pytest
 
 
 def fprogress_callback(progress: float, name: str, bytes: int):
@@ -12,8 +11,8 @@ def fprogress_callback(progress: float, name: str, bytes: int):
 
 def sha256_checksum(filename, block_size=65536):
     sha256 = hashlib.sha256()
-    with filename.open('rb') as f:
-        for block in iter(lambda: f.read(block_size), b''):
+    with filename.open("rb") as f:
+        for block in iter(lambda: f.read(block_size), b""):
             sha256.update(block)
     return sha256.hexdigest()
 
@@ -29,7 +28,7 @@ def _pack_sample_game(tmp_path_factory):
 
 def test_packunpack(pack_sample_game):
     iso_hash = sha256_checksum(pack_sample_game)
-    assert iso_hash == '0d98f9bf2c94051bec6145373c0b2c4baee0b35ccb066eaf354fd5a7b9324816'
+    assert iso_hash == "0d98f9bf2c94051bec6145373c0b2c4baee0b35ccb066eaf354fd5a7b9324816"
 
 
 def test_build_and_check(pack_sample_game):
@@ -63,8 +62,23 @@ def test_get_header(pack_sample_game):
 
     header: nod.DolHeader = data.get_header()
     assert header == nod.DolHeader(
-        game_id=b'G2ME0R', disc_num=0, disc_version=0, audio_streaming=1, stream_buf_sz=0, wii_magic=0,
+        game_id=b"G2ME0R",
+        disc_num=0,
+        disc_version=0,
+        audio_streaming=1,
+        stream_buf_sz=0,
+        wii_magic=0,
         gcn_magic=3258163005,
-        game_title=b'Metroid Prime 2: Randomizer - QFHHNLN3'.ljust(64, b'\x00'),
-        disable_hash_verification=0, disable_disc_enc=0, debug_mon_off=0, debug_load_addr=0, dol_off=1459978240,
-        fst_off=9280, fst_sz=96, fst_max_sz=96, fst_memory_address=255680, user_position=1459978176, user_sz=64)
+        game_title=b"Metroid Prime 2: Randomizer - QFHHNLN3".ljust(64, b"\x00"),
+        disable_hash_verification=0,
+        disable_disc_enc=0,
+        debug_mon_off=0,
+        debug_load_addr=0,
+        dol_off=1459978240,
+        fst_off=9280,
+        fst_sz=96,
+        fst_max_sz=96,
+        fst_memory_address=255680,
+        user_position=1459978176,
+        user_sz=64,
+    )

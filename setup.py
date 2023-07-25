@@ -34,9 +34,11 @@ ext_modules = [
         ],
         cmake_project=cmake_project_dir,
         cmake_targets=[
-            "nod", "logvisor", "fmt",
+            "nod",
+            "logvisor",
+            "fmt",
         ],
-        language='c++',
+        language="c++",
         extra_compile_args=extra_compile_args,
         extra_objects=[],
     )
@@ -50,7 +52,7 @@ cythonized_ext_modules = setuptools_cmake_helper.cythonize_extensions(
 
 setup(
     cmdclass={
-        'build_ext': setuptools_cmake_helper.CMakeBuild,
+        "build_ext": setuptools_cmake_helper.CMakeBuild,
     },
     ext_modules=cythonized_ext_modules,
 )

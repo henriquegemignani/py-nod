@@ -1,6 +1,5 @@
 import argparse
-
-import os
+from pathlib import Path
 
 import nod
 
@@ -12,14 +11,14 @@ class Commands:
     def fprogress_callback(self, progress: float, name: str, bytes: int):
         if self.args.verbose:
             print("\r" + " " * 100, end="")
-            print("\r{:.0%} {} {} B".format(progress, name, bytes), flush=True)
+            print(f"\r{progress:.0%} {name} {bytes} B", flush=True)
 
     def extract(self):
         args = self.args
 
         def progress_callback(path, progress):
             if args.verbose:
-                print("Extraction {:.0%} Complete; Current node: {}".format(progress, path))
+                print(f"Extraction {progress:.0%} Complete; Current node: {path}")
 
         context = nod.ExtractionContext()
         context.set_progress_callback(progress_callback)
@@ -33,14 +32,14 @@ class Commands:
 
         except RuntimeError as e:
             if args.verbose:
-                print("Could not extract disc at '{}' to '{}': {}".format(args.image_in, args.directory_out, e))
+                print(f"Could not extract disc at '{args.image_in}' to '{args.directory_out}': {e}")
             raise SystemExit(1)
 
     def makegcn(self):
         filesystem_root = self.args.filesystem_root
 
-        if not os.path.isdir(filesystem_root):
-            print("Error, '{}' is not a directory.".format(filesystem_root))
+        if not Path(filesystem_root).is_dir():
+            print(f"Error, '{filesystem_root}' is not a directory.")
             raise SystemExit(1)
 
         if nod.DiscBuilderGCN.calculate_total_size_required(filesystem_root) is None:
@@ -53,11 +52,10 @@ class Commands:
             if self.args.verbose:
                 print()
         except RuntimeError as e:
-            print("Error when trying to create an ISO at '{}' with '{}' as input: {}".format(
-                self.args.image_out, filesystem_root, e
-            ))
+            print(
+                f"Error when trying to create an ISO at '{self.args.image_out}' with '{filesystem_root}' as input: {e}"
+            )
             raise SystemExit(3)
-
 
     def execute(self):
         getattr(self, self.args.command)()
@@ -68,19 +66,13 @@ def create_parsers():
     sub_parsers = parser.add_subparsers(dest="command")
 
     # Extract
-    extract_parser = sub_parsers.add_parser(
-        "extract",
-        help="Extract an iso"
-    )
+    extract_parser = sub_parsers.add_parser("extract", help="Extract an iso")
     extract_parser.add_argument("image_in", type=str)
     extract_parser.add_argument("directory_out", type=str)
     extract_parser.add_argument("-v", "--verbose", action="store_true")
 
     # Make GCN
-    make_gcn_parser = sub_parsers.add_parser(
-        "makegcn",
-        help="Create a Nintendo GameCube ISO from files."
-    )
+    make_gcn_parser = sub_parsers.add_parser("makegcn", help="Create a Nintendo GameCube ISO from files.")
     make_gcn_parser.add_argument("filesystem_root", type=str)
     make_gcn_parser.add_argument("image_out", type=str)
     make_gcn_parser.add_argument("-v", "--verbose", action="store_true")
@@ -95,6 +87,7 @@ def parse_args(parser):
         raise SystemExit(1)
 
     Commands(args).execute()
+
 
 if __name__ == "__main__":
     parse_args(create_parsers())
