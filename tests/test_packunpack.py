@@ -17,8 +17,8 @@ def sha256_checksum(filename, block_size=65536):
     return sha256.hexdigest()
 
 
-@pytest.fixture(name="pack_sample_game", scope="session")
-def _pack_sample_game(tmp_path_factory):
+@pytest.fixture(scope="session")
+def pack_sample_game(tmp_path_factory):
     filesystem_root = Path(__file__).parent.joinpath("sample_game")
     image_out = tmp_path_factory.mktemp("iso").joinpath("game.iso")
     disc_builder = nod.DiscBuilderGCN(image_out, fprogress_callback)
