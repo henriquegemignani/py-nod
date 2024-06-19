@@ -101,7 +101,7 @@ cdef class ExtractionContext:
 
 cdef class PartReadStream:
     cdef unique_ptr[c_IPartReadStream] c_stream
-    cdef int offset
+    cdef uint64_t offset
     cdef uint64_t _size
 
     @staticmethod
