@@ -1,8 +1,9 @@
 import hashlib
 from pathlib import Path
 
-import nod
 import pytest
+
+import nod
 
 
 def fprogress_callback(progress: float, name: str, bytes: int):
