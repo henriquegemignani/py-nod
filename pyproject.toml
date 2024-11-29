@@ -55,6 +55,8 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
 select = [
     "E", "F", "W", "C90", "I", "UP", "C4",
     "RSE",
@@ -70,10 +72,3 @@ select = [
     "PLR",
     "PLW",
 ]
-
-# Version to target for generated code.
-target-version = "py38"
-
-[tool.black]
-line-length = 120
-target-version = ['py38', 'py39', 'py310', 'py311']
