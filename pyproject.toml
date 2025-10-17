@@ -11,9 +11,8 @@ build-backend = "setuptools.build_meta"
 name = "nod"
 authors = [{name = "Henrique Gemignani"}]
 description = "Python bindings for the nod library."
-license = {text = "License :: OSI Approved :: MIT License"}
+license = "MIT"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3 :: Only",
