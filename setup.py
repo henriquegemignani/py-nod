@@ -47,7 +47,11 @@ ext_modules = [
 cythonized_ext_modules = setuptools_cmake_helper.cythonize_extensions(
     ext_modules,
     include_paths=[os.fspath(p) for p in custom_include_paths],
-    language_level="3",
+    compiler_directives={
+        "embedsignature": True,
+        "language_level": "3",
+        "freethreading_compatible": True,
+    },
 )
 
 setup(
