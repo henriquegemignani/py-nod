@@ -92,11 +92,52 @@ jobs:
           name: python-package-${{ matrix.only }}
           path: dist
 
+  test-wheels:
+    name: Test ${{ matrix.platform.os }} / Python ${{ matrix.python-version }}
+    needs: build-wheels
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - os: ubuntu-latest
+            artifact: python-package-cp39-manylinux_x86_64
+          - os: macos-latest
+            artifact: python-package-cp39-macosx_arm64
+          - os: macos-15-intel
+            artifact: python-package-cp39-macosx_x86_64
+          - os: windows-latest
+            artifact: python-package-cp39-win_amd64
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+        
+      - name: Download wheel
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.platform.artifact }}
+          path: dist/
+        
+      - name: Install package
+        run: pip install nod --find-links dist/ --no-index
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Run tests
+        run: pytest tests/
+
   pypi:
     runs-on: 'ubuntu-latest'
     needs:
       - build-sdist
       - build-wheels
+      - test-wheels
 
     steps:
       - name: Download all the dists
