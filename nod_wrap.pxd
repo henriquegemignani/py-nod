@@ -91,7 +91,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
         uint8_t padding1[4]
 
     cppclass IPartition:
-        c_bool extractToDirectory(string path, const ExtractionContext& ctx) nogil except * const
+        c_bool extractToDirectory(string path, const ExtractionContext& ctx) except * nogil const
         uint64_t getDOLSize() const
         const Header& getHeader() const
         const Node& getFSTRoot() const
@@ -104,7 +104,7 @@ cdef extern from "nod/DiscBase.hpp" namespace "nod":
 cdef extern  from "nod/DiscGCN.hpp" namespace "nod":
     cdef cppclass DiscBuilderGCN:
         DiscBuilderGCN(string outPath, FProgress progressCB)
-        EBuildResult buildFromDirectory(string dirIn) nogil except *
+        EBuildResult buildFromDirectory(string dirIn) except * nogil
 
         @staticmethod
         optional[uint64_t] CalculateTotalSizeRequired(string dirIn) nogil
