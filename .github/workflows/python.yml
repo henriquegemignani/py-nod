@@ -37,6 +37,7 @@ jobs:
           )
           echo "include=$MATRIX" >> $GITHUB_OUTPUT          
     env:
+      CIBW_BUILD: cp39-*
       CIBW_ARCHS_LINUX: x86_64
       CIBW_ARCHS_MACOS: arm64 x86_64
       CIBW_ARCHS_WINDOWS: AMD64

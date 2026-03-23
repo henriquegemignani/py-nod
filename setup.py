@@ -41,6 +41,8 @@ ext_modules = [
         language="c++",
         extra_compile_args=extra_compile_args,
         extra_objects=[],
+        py_limited_api=True,
+        define_macros=[("Py_LIMITED_API", "0x03090000")],
     )
 ]
 
