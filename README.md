@@ -9,9 +9,11 @@ GameCube and Wii optical disc images.
 ```python
 import nod
 
+
 def progress_callback(path, progress):
     if args.verbose:
         print("Extraction {:.0%} Complete; Current node: {}".format(progress, path))
+
 
 context = nod.ExtractionContext()
 context.set_progress_callback(progress_callback)
@@ -24,7 +26,6 @@ try:
     data_partition.extract_to_directory("dir_out", context)
 except RuntimeError as e:
     raise Exception("Could not extract disc at 'game.iso' to 'dir_out': {}".format(e))
-
 ```
 
 ### Packing
@@ -35,15 +36,15 @@ import nod
 if nod.DiscBuilderGCN.calculate_total_size_required("dir_out") is None:
     raise Exception("Image built with given directory would pass the maximum size.")
 
+
 def fprogress_callback(progress: float, name: str, bytes: int):
     print("\r" + " " * 100, end="")
     print("\r{:.0%} {} {} B".format(progress, name, bytes), flush=True)
 
+
 disc_builder = nod.DiscBuilderGCN("game.iso", fprogress_callback)
 try:
-    disc_builder.build_from_directory("dir_out")    
+    disc_builder.build_from_directory("dir_out")
 except RuntimeError as e:
     raise Exception("Failure building the image: {}".format(e))
-
-
 ```
